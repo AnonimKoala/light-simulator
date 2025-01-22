@@ -3,6 +3,8 @@ from PyQt6.QtGui import QPainter, QPen, QBrush
 from PyQt6.QtCore import Qt, QRectF, QPointF
 import sys
 
+SCENE_SIZE = 5000
+
 
 class ScalePoint(QGraphicsEllipseItem):
     """A small draggable point used for scaling."""
@@ -71,11 +73,17 @@ class ZoomableView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)  # Enable panning
 
         self.scale_mode = False
+        self.moving_mode = False
 
     def hide_objs_scale_points(self):
         for item in self.scene().items():
-            if isinstance(item, ScalableItem):
+            if isinstance(item, EllipseItem):
                 item.hide_scale_points()
+
+    def toggle_objs_movable(self):
+        for item in self.items():
+            if isinstance(item, EllipseItem):
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
 
     def keyPressEvent(self, event):
         """Handle key press events for toggling scalability."""
@@ -84,29 +92,46 @@ class ZoomableView(QGraphicsView):
 
             if self.scale_mode:
                 selected_item = self.scene().selectedItems()[0]
-                if isinstance(selected_item, ScalableItem):
+                if isinstance(selected_item, EllipseItem):
                     selected_item.show_scale_points()
             else:
                 self.hide_objs_scale_points()
 
 
-class ScalableItem(QGraphicsEllipseItem):
+        elif event.key() == Qt.Key.Key_M:
+            self.moving_mode = not self.moving_mode
+            self.toggle_objs_movable()
+
+    def wheelEvent(self, event):
+        zoom_factor = 1.15
+        if event.angleDelta().y() > 0:
+            self.scale(zoom_factor, zoom_factor)
+        else:
+            self.scale(1 / zoom_factor, 1 / zoom_factor)
+
+
+class EllipseItem(QGraphicsEllipseItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
         super().__init__(x, y, width, height)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
         self.setPen(QPen(Qt.GlobalColor.white))  # Set border color
         self.setBrush(QBrush(Qt.GlobalColor.cyan))  # Set fill color
 
-        self.view = view    # scene
+        self.view = view  # scene
 
         self.scale_points = []  # List of scale points (handles)
         self.scale_corners = []
         self.scale_edges = []
 
-
+    def itemChange(self, change, value):
+        """Override itemChange to track position changes."""
+        print(f"New position: {self.pos().x()} {self.pos().y()}")
+        return super().itemChange(change, value)
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
@@ -177,21 +202,17 @@ def main():
 
     # Create a graphics scene
     scene = QGraphicsScene()
-    scene.setSceneRect(-500, -500, 1000, 1000)
-
-    # Add scalable items to the scene
+    scene.setSceneRect(-SCENE_SIZE / 2, -SCENE_SIZE / 2, SCENE_SIZE, SCENE_SIZE)  # Define coordinate bounds
 
 
     # Create a zoomable view and set the scene
     view = ZoomableView(scene)
     view.setWindowTitle("Scalable Items with Center Points")
 
-
-    ellipse1 = ScalableItem(-100, -50, 200, 100, view)
-    ellipse2 = ScalableItem(200, 200, 150, 75, view)
+    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
+    ellipse2 = EllipseItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
-
 
     view.resize(800, 600)
     view.show()
