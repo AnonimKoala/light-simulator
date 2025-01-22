@@ -9,6 +9,7 @@ import sys
 from tools import convert_qt_angle2cartesian
 
 SCENE_SIZE = 5000
+FONT_SIZE = 14
 
 
 class ScalePoint(QGraphicsEllipseItem):
@@ -77,6 +78,8 @@ class ZoomableView(QGraphicsView):
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)  # Enable panning
 
+        self.scale_factor = 1.0
+
         self.scale_mode = False
         self.moving_mode = False
         self.rotation_mode = False
@@ -138,7 +141,6 @@ class ZoomableView(QGraphicsView):
                 # Store the current rotation angle
                 self.start_rotation = item.rotation()
 
-                print("Rotation started")
                 self.selected_item.show_hint()
         super().mousePressEvent(event)
 
@@ -190,8 +192,19 @@ class ZoomableView(QGraphicsView):
         zoom_factor = 1.15
         if event.angleDelta().y() > 0:
             self.scale(zoom_factor, zoom_factor)
+            self.scale_factor *= zoom_factor
         else:
             self.scale(1 / zoom_factor, 1 / zoom_factor)
+            self.scale_factor /= zoom_factor
+
+        self.upd_hnt_font()
+
+    def upd_hnt_font(self):
+        for item in self.scene().items():
+            if isinstance(item, EllipseItem):
+                item.font.setPointSize(int(FONT_SIZE / self.scale_factor))
+                item.rotation_hint.setFont(item.font)
+                item.update_hint_position()
 
 
 class EllipseItem(QGraphicsEllipseItem):
@@ -210,7 +223,7 @@ class EllipseItem(QGraphicsEllipseItem):
         self.rotation_hint = QGraphicsSimpleTextItem("0°")
         self.rotation_hint.setZValue(1)  # Ensure it's on top of other items
         self.rotation_hint.setBrush(QBrush(Qt.GlobalColor.white))  # Set text color to white
-        self.font = QFont("Arial", 12)  # Default font size
+        self.font = QFont("Arial", FONT_SIZE)  # Default font size
         self.rotation_hint.setFont(self.font)
 
         view.scene().addItem(self.rotation_hint)  # Add hint directly to the scene
