@@ -3,6 +3,8 @@ from PyQt6.QtGui import QPainter, QPen, QBrush
 from PyQt6.QtCore import Qt, QRectF, QPointF
 import sys
 
+SCENE_SIZE = 5000
+
 
 class ScalePoint(QGraphicsEllipseItem):
     """A small draggable point used for scaling."""
@@ -184,21 +186,17 @@ def main():
 
     # Create a graphics scene
     scene = QGraphicsScene()
-    scene.setSceneRect(-500, -500, 1000, 1000)
-
-    # Add scalable items to the scene
+    scene.setSceneRect(-SCENE_SIZE / 2, -SCENE_SIZE / 2, SCENE_SIZE, SCENE_SIZE)  # Define coordinate bounds
 
 
     # Create a zoomable view and set the scene
     view = ZoomableView(scene)
     view.setWindowTitle("Scalable Items with Center Points")
 
-
     ellipse1 = EllipseItem(-100, -50, 200, 100, view)
     ellipse2 = EllipseItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
-
 
     view.resize(800, 600)
     view.show()
