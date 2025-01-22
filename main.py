@@ -97,6 +97,8 @@ class EllipseItem(QGraphicsEllipseItem):
         super().__init__(x, y, width, height)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
+
         self.setPen(QPen(Qt.GlobalColor.white))  # Set border color
         self.setBrush(QBrush(Qt.GlobalColor.cyan))  # Set fill color
 
@@ -105,6 +107,11 @@ class EllipseItem(QGraphicsEllipseItem):
         self.scale_points = []  # List of scale points (handles)
         self.scale_corners = []
         self.scale_edges = []
+
+    def itemChange(self, change, value):
+        """Override itemChange to track position changes."""
+        print(f"New position: {self.pos().x()} {self.pos().y()}")
+        return super().itemChange(change, value)
 
 
 
