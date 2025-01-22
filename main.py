@@ -24,7 +24,7 @@ class ScalePoint(QGraphicsEllipseItem):
         if not self.parent_item.scene().views()[0].scale_mode:
             return
 
-        current_pos = event.scenePos()
+        current_pos = self.mapToParent(event.pos())
         rect = self.parent_item.rect()
 
         if self.direction == "horizontal":
@@ -114,7 +114,8 @@ class EllipseItem(QGraphicsEllipseItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
-        super().__init__(x, y, width, height)
+        super().__init__(0, 0, width, height)
+        self.setPos(x, y)  # Set position separately
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
@@ -162,22 +163,23 @@ class EllipseItem(QGraphicsEllipseItem):
             self.update_scale_contour()
 
             for i, corner in enumerate(self.scale_corners):
-                opposite_corner = self.scale_corners[(i + 2) % 4]  # Opposite corner is two indices away in a square
+                opposite_corner = self.scale_corners[(i + 2) % 4]
                 point = ScalePoint(corner.x(), corner.y(), self)
                 point.opposite_point = opposite_corner
-                self.scene().addItem(point)
+                point.setParentItem(self)  # Set as child item
                 self.scale_points.append(point)
 
             for i, edge in enumerate(self.scale_edges):
-                opposite_edge_center = self.scale_edges[(i + 2) % len(self.scale_edges)]  # Opposite edge center
+                opposite_edge_center = self.scale_edges[(i + 2) % len(self.scale_edges)]
                 direction = "horizontal" if i >= 2 else "vertical"
                 point = ScalePoint(edge.x(), edge.y(), self, opposite_point=opposite_edge_center, direction=direction)
-                self.scene().addItem(point)
+                point.setParentItem(self)  # Set as child item
                 self.scale_points.append(point)
 
     def hide_scale_points(self):
         """Remove all scale points from the scene."""
         for point in self.scale_points:
+            point.setParentItem(None)  # Remove parent before deleting
             self.scene().removeItem(point)
         self.scale_points.clear()
 
