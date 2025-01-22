@@ -74,7 +74,7 @@ class ZoomableView(QGraphicsView):
 
     def hide_objs_scale_points(self):
         for item in self.scene().items():
-            if isinstance(item, ScalableItem):
+            if isinstance(item, EllipseItem):
                 item.hide_scale_points()
 
     def keyPressEvent(self, event):
@@ -84,13 +84,13 @@ class ZoomableView(QGraphicsView):
 
             if self.scale_mode:
                 selected_item = self.scene().selectedItems()[0]
-                if isinstance(selected_item, ScalableItem):
+                if isinstance(selected_item, EllipseItem):
                     selected_item.show_scale_points()
             else:
                 self.hide_objs_scale_points()
 
 
-class ScalableItem(QGraphicsEllipseItem):
+class EllipseItem(QGraphicsEllipseItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
@@ -187,8 +187,8 @@ def main():
     view.setWindowTitle("Scalable Items with Center Points")
 
 
-    ellipse1 = ScalableItem(-100, -50, 200, 100, view)
-    ellipse2 = ScalableItem(200, 200, 150, 75, view)
+    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
+    ellipse2 = EllipseItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
 
