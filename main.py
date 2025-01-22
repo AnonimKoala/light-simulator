@@ -76,11 +76,12 @@ class ZoomableView(QGraphicsView):
         self.moving_mode = False
 
     def hide_objs_scale_points(self):
+    def disable_objs_scaling(self):
         for item in self.scene().items():
             if isinstance(item, EllipseItem):
                 item.hide_scale_points()
 
-    def toggle_objs_movable(self):
+    def upd_objs_movable(self):
         for item in self.items():
             if isinstance(item, EllipseItem):
                 item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
@@ -95,12 +96,12 @@ class ZoomableView(QGraphicsView):
                 if isinstance(selected_item, EllipseItem):
                     selected_item.show_scale_points()
             else:
-                self.hide_objs_scale_points()
-
+                self.disable_objs_scaling()
 
         elif event.key() == Qt.Key.Key_M:
             self.moving_mode = not self.moving_mode
             self.toggle_objs_movable()
+            self.upd_objs_movable()
 
     def wheelEvent(self, event):
         zoom_factor = 1.15
@@ -138,7 +139,7 @@ class EllipseItem(QGraphicsEllipseItem):
         super().focusInEvent(event)
 
         if self.view.scale_mode:
-            self.view.hide_objs_scale_points()
+            self.view.disable_objs_scaling()
             self.show_scale_points()
 
     def update_scale_contour(self):
