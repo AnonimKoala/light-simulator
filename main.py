@@ -82,7 +82,8 @@ class ZoomableView(QGraphicsView):
 
     def toggle_objs_movable(self):
         for item in self.items():
-            item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
+            if isinstance(item, EllipseItem):
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
 
     def keyPressEvent(self, event):
         """Handle key press events for toggling scalability."""
