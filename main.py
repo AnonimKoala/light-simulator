@@ -90,16 +90,6 @@ class ZoomableView(QGraphicsView):
         self.start_rotation = None
         self.origin_pos = None
 
-    def disable_objs_scaling(self):
-        for item in self.scene().items():
-            if isinstance(item, EllipseItem):
-                item.hide_scale_points()
-
-    def upd_objs_movable(self):
-        for item in self.items():
-            if isinstance(item, EllipseItem):
-                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
-
     def keyPressEvent(self, event):
         """Handle key press events for toggling scalability."""
         if event.key() == Qt.Key.Key_S:  # Press 'S' to toggle scale mode for selected items
@@ -107,7 +97,7 @@ class ZoomableView(QGraphicsView):
 
             if self.scale_mode:
                 selected_item = self.scene().selectedItems()[0]
-                if isinstance(selected_item, EllipseItem):
+                if isinstance(selected_item, SceneItem):
                     selected_item.show_scale_points()
             else:
                 self.disable_objs_scaling()
@@ -123,7 +113,7 @@ class ZoomableView(QGraphicsView):
 
             if not self.rotation_mode:
                 for item in self.scene().items():
-                    if isinstance(item, EllipseItem):
+                    if isinstance(item, SceneItem):
                         item.hide_hint()
 
             self.upd_objs_movable()
@@ -134,7 +124,7 @@ class ZoomableView(QGraphicsView):
     def mousePressEvent(self, event):
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
-            if item and isinstance(item, EllipseItem):
+            if item and isinstance(item, SceneItem):
                 self.selected_item = item
                 self.origin_pos = self.mapToScene(event.pos())
 
@@ -197,17 +187,27 @@ class ZoomableView(QGraphicsView):
             self.scale(1 / zoom_factor, 1 / zoom_factor)
             self.scale_factor /= zoom_factor
 
-        self.upd_hnt_font()
+        self.upd_hint_font()
 
-    def upd_hnt_font(self):
+    def upd_hint_font(self):
         for item in self.scene().items():
-            if isinstance(item, EllipseItem):
+            if isinstance(item, SceneItem):
                 item.font.setPointSize(int(FONT_SIZE / self.scale_factor))
                 item.rotation_hint.setFont(item.font)
                 item.update_hint_position()
 
+    def disable_objs_scaling(self):
+        for item in self.scene().items():
+            if isinstance(item, SceneItem):
+                item.hide_scale_points()
 
-class EllipseItem(QGraphicsEllipseItem):
+    def upd_objs_movable(self):
+        for item in self.items():
+            if isinstance(item, SceneItem):
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
+
+
+class SceneItem(QGraphicsEllipseItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
@@ -344,8 +344,8 @@ def main():
     view = ZoomableView(scene)
     view.setWindowTitle("Scalable Items with Center Points")
 
-    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
-    ellipse2 = EllipseItem(200, 200, 150, 75, view)
+    ellipse1 = SceneItem(-100, -50, 200, 100, view)
+    ellipse2 = SceneItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
 
