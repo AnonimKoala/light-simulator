@@ -329,6 +329,9 @@ class EllipseItem(QGraphicsEllipseItem):
                 point = self.scale_points[index]
                 point.setRect(edge.x() - 5, edge.y() - 5, 10, 10)
 
+    def mouseReleaseEvent(self, event):
+        self.update_hint_position()
+        super().mouseReleaseEvent(event)
 
 def main():
     app = QApplication(sys.argv)
