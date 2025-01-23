@@ -2,8 +2,8 @@ import math
 
 from PyQt6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsItem, QGraphicsEllipseItem, \
     QGraphicsSimpleTextItem
-from PyQt6.QtGui import QPainter, QPen, QBrush, QLinearGradient, QFont
-from PyQt6.QtCore import Qt, QPointF
+from PyQt6.QtGui import QPainter, QPen, QBrush, QLinearGradient, QFont, QColor
+from PyQt6.QtCore import Qt, QPointF, QRectF
 import sys
 
 from tools import convert_qt_angle2cartesian
@@ -245,12 +245,17 @@ class ZoomableView(QGraphicsView):
             self.disable_items_rotation()
 
 
-class SceneItem(QGraphicsEllipseItem):
+class SceneItem(QGraphicsItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
-        super().__init__(0, 0, width, height)
+        super().__init__()
         self.setPos(x, y)  # Set position separately
+        self.setRect(0, 0, width, height)
+
+        self.width = width
+        self.height = height
+
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
@@ -267,17 +272,19 @@ class SceneItem(QGraphicsEllipseItem):
         self.update_hint_position()
         self.upd_transform_origin()
 
-        self.setPen(QPen(Qt.GlobalColor.white))  # Set border color
-        gradient = QLinearGradient(0, 0, width, height)
-        gradient.setColorAt(0, Qt.GlobalColor.red)
-        gradient.setColorAt(1, Qt.GlobalColor.green)
-        self.setBrush(QBrush(gradient))  # Set fill color with gradient
 
         self.view = view  # scene
 
         self.scale_points = []  # List of scale points (handles)
         self.scale_corners = []
         self.scale_edges = []
+
+    def setRect(self, x, y, width, height):
+        """Set the rectangle with the given position and size."""
+        self.setPos(x, y)
+        self.width = width
+        self.height = height
+        self.prepareGeometryChange()
 
     def itemChange(self, change, value):
         """Override itemChange to track position changes."""
@@ -381,6 +388,37 @@ class SceneItem(QGraphicsEllipseItem):
         self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
 
 
+class EllipseItem(QGraphicsEllipseItem, SceneItem):
+    """Ellipse item with shared functionality from SceneItem."""
+
+    def __init__(self, x, y, width, height, view):
+        QGraphicsEllipseItem.__init__(self, 0, 0, width, height)
+        SceneItem.__init__(self, x, y, width, height, view)
+
+        # self.setRect(0, 0, width, height)
+        # self.setBrush(QBrush(QColor("blue")))
+        # self.setPen(QPen(QColor("black")))
+        # Set appearance (gradient fill)
+        # Define a linear gradient in local coordinates
+        gradient = QLinearGradient(0, 0, width, height)
+        gradient.setColorAt(0.0, QColor("red"))
+        gradient.setColorAt(1.0, QColor("green"))
+
+        # Apply the gradient as a brush
+        self.setBrush(QBrush(gradient))
+
+        # Set a white pen for the outline
+        self.setPen(QPen(QColor("white")))
+
+    def boundingRect(self):
+        """Override boundingRect to use the ellipse's bounding box."""
+        return QGraphicsEllipseItem.boundingRect(self)
+
+    def paint(self, painter, option, widget):
+        """Delegate painting to QGraphicsEllipseItem."""
+        super().paint(painter, option, widget)
+
+
 def main():
     app = QApplication(sys.argv)
 
@@ -392,8 +430,8 @@ def main():
     view = ZoomableView(scene)
     view.setWindowTitle("Light Simulator")
 
-    ellipse1 = SceneItem(-100, -50, 200, 100, view)
-    ellipse2 = SceneItem(200, 200, 150, 75, view)
+    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
+    ellipse2 = EllipseItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
 
