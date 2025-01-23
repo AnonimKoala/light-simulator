@@ -3,7 +3,7 @@ import math
 from PyQt6.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QGraphicsItem, QGraphicsEllipseItem, \
     QGraphicsSimpleTextItem
 from PyQt6.QtGui import QPainter, QPen, QBrush, QLinearGradient, QFont
-from PyQt6.QtCore import Qt, QRectF, QPointF
+from PyQt6.QtCore import Qt, QPointF
 import sys
 
 from tools import convert_qt_angle2cartesian
@@ -90,51 +90,23 @@ class ZoomableView(QGraphicsView):
         self.start_rotation = None
         self.origin_pos = None
 
-    def disable_objs_scaling(self):
-        for item in self.scene().items():
-            if isinstance(item, EllipseItem):
-                item.hide_scale_points()
-
-    def upd_objs_movable(self):
-        for item in self.items():
-            if isinstance(item, EllipseItem):
-                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
-
     def keyPressEvent(self, event):
         """Handle key press events for toggling scalability."""
         if event.key() == Qt.Key.Key_S:  # Press 'S' to toggle scale mode for selected items
-            self.scale_mode = not self.scale_mode
-
-            if self.scale_mode:
-                selected_item = self.scene().selectedItems()[0]
-                if isinstance(selected_item, EllipseItem):
-                    selected_item.show_scale_points()
-            else:
-                self.disable_objs_scaling()
+            self.toggle_items_scaling()
 
         elif event.key() == Qt.Key.Key_M:
-            self.moving_mode = not self.moving_mode
-            self.upd_objs_movable()
+            self.toggle_items_moving()
 
         elif event.key() == Qt.Key.Key_R:  # Toggle rotation mode when 'R' is pressed
-            self.rotation_mode = not self.rotation_mode
-            self.scale_mode = False
-            self.moving_mode = False
-
-            if not self.rotation_mode:
-                for item in self.scene().items():
-                    if isinstance(item, EllipseItem):
-                        item.hide_hint()
-
-            self.upd_objs_movable()
-            self.disable_objs_scaling()
+            self.toggle_items_rotation()
 
             print("Rotation mode:", "ON" if self.rotation_mode else "OFF")
 
     def mousePressEvent(self, event):
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
-            if item and isinstance(item, EllipseItem):
+            if item and isinstance(item, SceneItem):
                 self.selected_item = item
                 self.origin_pos = self.mapToScene(event.pos())
 
@@ -197,17 +169,80 @@ class ZoomableView(QGraphicsView):
             self.scale(1 / zoom_factor, 1 / zoom_factor)
             self.scale_factor /= zoom_factor
 
-        self.upd_hnt_font()
+        self.upd_hint_font()
 
-    def upd_hnt_font(self):
+    def upd_hint_font(self):
         for item in self.scene().items():
-            if isinstance(item, EllipseItem):
+            if isinstance(item, SceneItem):
                 item.font.setPointSize(int(FONT_SIZE / self.scale_factor))
                 item.rotation_hint.setFont(item.font)
                 item.update_hint_position()
 
+    def enable_items_moving(self):
+        self.disable_items_rotation()
+        self.moving_mode = True
+        self.upd_items_move_state()
 
-class EllipseItem(QGraphicsEllipseItem):
+    def enable_items_scaling(self):
+        self.disable_items_rotation()
+        self.disable_items_scaling()
+        self.scale_mode = True
+        selected_item = self.scene().selectedItems()[0]
+        if isinstance(selected_item, SceneItem):
+            selected_item.show_scale_points()
+
+    def enable_items_rotation(self):
+        self.disable_items_moving()
+        self.disable_items_scaling()
+        self.rotation_mode = True
+
+    def disable_items_moving(self):
+        self.moving_mode = False
+        self.upd_items_move_state()
+
+    def disable_items_scaling(self):
+        self.scale_mode = False
+        for item in self.scene().items():
+            if isinstance(item, SceneItem):
+                item.hide_scale_points()
+
+    def disable_items_rotation(self):
+        self.rotation_mode = False
+
+        for item in self.scene().items():
+            if isinstance(item, SceneItem):
+                item.hide_hint()
+
+    def upd_items_move_state(self):
+        for item in self.items():
+            if isinstance(item, SceneItem):
+                item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
+
+    def toggle_items_moving(self):
+        self.moving_mode = not self.moving_mode
+        if self.moving_mode:
+            self.enable_items_moving()
+        else:
+            self.disable_items_moving()
+
+    def toggle_items_scaling(self):
+        self.scale_mode = not self.scale_mode
+
+        if self.scale_mode:
+            self.enable_items_scaling()
+        else:
+            self.disable_items_scaling()
+
+    def toggle_items_rotation(self):
+        self.rotation_mode = not self.rotation_mode
+
+        if not self.rotation_mode:
+            self.disable_items_rotation()
+        else:
+            self.enable_items_rotation()
+
+
+class SceneItem(QGraphicsEllipseItem):
     """An ellipse that supports scaling with draggable points."""
 
     def __init__(self, x, y, width, height, view: ZoomableView):
@@ -242,24 +277,6 @@ class EllipseItem(QGraphicsEllipseItem):
         self.scale_corners = []
         self.scale_edges = []
 
-    def update_hint_position(self):
-        """Update the position of the rotation hint."""
-        center = self.sceneBoundingRect().center()  # Get center in scene coordinates
-        self.rotation_hint.setPos(center.x() - self.rotation_hint.boundingRect().width() / 2,
-                                  center.y() - self.rotation_hint.boundingRect().height() / 2)
-
-    def update_hint_text(self, angle):
-        """Update the text of the rotation hint."""
-        self.rotation_hint.setText(f"{int(angle)}°")
-
-    def show_hint(self):
-        """Show the rotation hint."""
-        self.rotation_hint.setVisible(True)
-
-    def hide_hint(self):
-        """Hide the rotation hint."""
-        self.rotation_hint.setVisible(False)
-
     def itemChange(self, change, value):
         """Override itemChange to track position changes."""
         print(f"New position: {self.pos().x()} {self.pos().y()}")
@@ -269,24 +286,30 @@ class EllipseItem(QGraphicsEllipseItem):
         super().focusInEvent(event)
 
         if self.view.scale_mode:
-            self.view.disable_objs_scaling()
+            self.view.disable_items_scaling()
             self.show_scale_points()
 
-    def update_scale_contour(self):
-        rect = self.rect()
+    def mouseReleaseEvent(self, event):
+        self.update_hint_position()
+        super().mouseReleaseEvent(event)
 
-        self.scale_corners = [
-            rect.topLeft(),
-            rect.topRight(),
-            rect.bottomRight(),
-            rect.bottomLeft(),
-        ]
-        self.scale_edges = [
-            QPointF(rect.center().x(), rect.top()),  # Top-center (horizontal scaling)
-            QPointF(rect.center().x(), rect.bottom()),  # Bottom-center (horizontal scaling)
-            QPointF(rect.right(), rect.center().y()),  # Right-center (vertical scaling)
-            QPointF(rect.left(), rect.center().y()),  # Left-center (vertical scaling)
-        ]
+    def show_hint(self):
+        """Show the rotation hint."""
+        self.rotation_hint.setVisible(True)
+
+    def hide_hint(self):
+        """Hide the rotation hint."""
+        self.rotation_hint.setVisible(False)
+
+    def update_hint_position(self):
+        """Update the position of the rotation hint."""
+        center = self.sceneBoundingRect().center()  # Get center in scene coordinates
+        self.rotation_hint.setPos(center.x() - self.rotation_hint.boundingRect().width() / 2,
+                                  center.y() - self.rotation_hint.boundingRect().height() / 2)
+
+    def update_hint_text(self, angle):
+        """Update the text of the rotation hint."""
+        self.rotation_hint.setText(f"{int(angle)}°")
 
     def show_scale_points(self):
         """Create and display scale points at the corners and edges of the object."""
@@ -314,6 +337,22 @@ class EllipseItem(QGraphicsEllipseItem):
             self.scene().removeItem(point)
         self.scale_points.clear()
 
+    def update_scale_contour(self):
+        rect = self.rect()
+
+        self.scale_corners = [
+            rect.topLeft(),
+            rect.topRight(),
+            rect.bottomRight(),
+            rect.bottomLeft(),
+        ]
+        self.scale_edges = [
+            QPointF(rect.center().x(), rect.top()),  # Top-center (horizontal scaling)
+            QPointF(rect.center().x(), rect.bottom()),  # Bottom-center (horizontal scaling)
+            QPointF(rect.right(), rect.center().y()),  # Right-center (vertical scaling)
+            QPointF(rect.left(), rect.center().y()),  # Left-center (vertical scaling)
+        ]
+
     def update_scale_points(self):
         """Update the positions of the scale points based on the object's size."""
         self.update_scale_contour()
@@ -339,10 +378,10 @@ def main():
 
     # Create a zoomable view and set the scene
     view = ZoomableView(scene)
-    view.setWindowTitle("Scalable Items with Center Points")
+    view.setWindowTitle("Light Simulator")
 
-    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
-    ellipse2 = EllipseItem(200, 200, 150, 75, view)
+    ellipse1 = SceneItem(-100, -50, 200, 100, view)
+    ellipse2 = SceneItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
 
