@@ -107,7 +107,7 @@ class ZoomableView(QGraphicsView):
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
             if item and isinstance(item, SceneItem):
-                item.upd_transform_origin()
+                item.update_transform_origin()
                 item.update_hint_position()
 
                 self.selected_item = item
@@ -149,7 +149,9 @@ class ZoomableView(QGraphicsView):
             self.selected_item.setRotation(rotation_angle)
             self.selected_item.update_hint_text(convert_qt_angle2cartesian(rotation_angle))
             print(
-                f"Current Angle: {convert_qt_angle2cartesian(rotation_angle):.2f}\tStart: {self.start_rotation} Diff: {rotation_diff}°")
+                f"Current Angle: {convert_qt_angle2cartesian(rotation_angle):.2f}\t"
+                f"Start: {self.start_rotation} Diff: {rotation_diff}°"
+            )
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
@@ -172,9 +174,9 @@ class ZoomableView(QGraphicsView):
             self.scale(1 / zoom_factor, 1 / zoom_factor)
             self.scale_factor /= zoom_factor
 
-        self.upd_hint_font()
+        self.update_hint_font()
 
-    def upd_hint_font(self):
+    def update_hint_font(self):
         for item in self.scene().items():
             if isinstance(item, SceneItem):
                 item.font.setPointSize(int(FONT_SIZE / self.scale_factor))
@@ -184,7 +186,7 @@ class ZoomableView(QGraphicsView):
     def enable_items_moving(self):
         self.disable_items_rotation()
         self.moving_mode = True
-        self.upd_items_move_state()
+        self.update_items_move_state()
 
     def enable_items_scaling(self):
         self.disable_items_rotation()
@@ -201,7 +203,7 @@ class ZoomableView(QGraphicsView):
 
     def disable_items_moving(self):
         self.moving_mode = False
-        self.upd_items_move_state()
+        self.update_items_move_state()
 
     def disable_items_scaling(self):
         self.scale_mode = False
@@ -216,7 +218,7 @@ class ZoomableView(QGraphicsView):
             if isinstance(item, SceneItem):
                 item.hide_hint()
 
-    def upd_items_move_state(self):
+    def update_items_move_state(self):
         for item in self.items():
             if isinstance(item, SceneItem):
                 item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
@@ -270,7 +272,7 @@ class SceneItem(QGraphicsItem):
         view.scene().addItem(self.rotation_hint)  # Add hint directly to the scene
         self.rotation_hint.setVisible(False)  # Initially hide the hint
         self.update_hint_position()
-        self.upd_transform_origin()
+        self.update_transform_origin()
 
 
         self.view = view  # scene
@@ -388,7 +390,7 @@ class SceneItem(QGraphicsItem):
                 point = self.scale_points[index]
                 point.setRect(edge.x() - 5, edge.y() - 5, 10, 10)
 
-    def upd_transform_origin(self):
+    def update_transform_origin(self):
         self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
 
 
@@ -399,10 +401,6 @@ class EllipseItem(QGraphicsEllipseItem, SceneItem):
         QGraphicsEllipseItem.__init__(self, 0, 0, width, height)
         SceneItem.__init__(self, x, y, width, height, view)
 
-        # self.setRect(0, 0, width, height)
-        # self.setBrush(QBrush(QColor("blue")))
-        # self.setPen(QPen(QColor("black")))
-        # Set appearance (gradient fill)
         # Define a linear gradient in local coordinates
         gradient = QLinearGradient(0, 0, width, height)
         gradient.setColorAt(0.0, QColor("red"))
