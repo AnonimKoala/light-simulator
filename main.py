@@ -1,29 +1,9 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene, QGraphicsEllipseItem
-from PyQt6.QtGui import QPen, QBrush, QLinearGradient, QColor
+from PyQt6.QtWidgets import QApplication, QGraphicsScene
 import sys
 
 from graphic.base import ZoomableView, SceneItem
 from graphic.config import SCENE_SIZE
-
-
-class EllipseItem(QGraphicsEllipseItem, SceneItem):
-    """Ellipse item with shared functionality from SceneItem."""
-
-    def __init__(self, x, y, width, height, view):
-        QGraphicsEllipseItem.__init__(self, 0, 0, width, height)
-        SceneItem.__init__(self, x, y, width, height, view)
-
-        # Define a linear gradient in local coordinates
-        gradient = QLinearGradient(0, 0, width, height)
-        gradient.setColorAt(0.0, QColor("red"))
-        gradient.setColorAt(1.0, QColor("green"))
-
-        # Apply the gradient as a brush
-        self.setBrush(QBrush(gradient))
-
-        # Set a white pen for the outline
-        self.setPen(QPen(QColor("white")))
-
+from graphic.items import EllipseItem, RectangleItem
 
 
 def main():
@@ -41,6 +21,9 @@ def main():
     ellipse2 = EllipseItem(200, 200, 150, 75, view)
     scene.addItem(ellipse1)
     scene.addItem(ellipse2)
+
+    rectangle = RectangleItem(50, 50, 150, 100, view)
+    scene.addItem(rectangle)
 
     view.resize(800, 600)
     view.show()
