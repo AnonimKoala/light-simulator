@@ -24,13 +24,6 @@ class EllipseItem(QGraphicsEllipseItem, SceneItem):
         # Set a white pen for the outline
         self.setPen(QPen(QColor("white")))
 
-    def boundingRect(self):
-        """Override boundingRect to use the ellipse's bounding box."""
-        return QGraphicsEllipseItem.boundingRect(self)
-
-    def paint(self, painter, option, widget):
-        """Delegate painting to QGraphicsEllipseItem."""
-        super().paint(painter, option, widget)
 
 
 def main():
