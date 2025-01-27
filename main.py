@@ -107,6 +107,9 @@ class ZoomableView(QGraphicsView):
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
             if item and isinstance(item, SceneItem):
+                item.upd_transform_origin()
+                item.update_hint_position()
+
                 self.selected_item = item
                 self.origin_pos = self.mapToScene(event.pos())
 
@@ -187,7 +190,7 @@ class ZoomableView(QGraphicsView):
         self.disable_items_rotation()
         self.disable_items_scaling()
         self.scale_mode = True
-        selected_item = self.scene().selectedItems()[0]
+        selected_item = self.scene().selectedItems()[0] if self.scene().selectedItems() else None
         if isinstance(selected_item, SceneItem):
             selected_item.show_scale_points()
 
@@ -236,10 +239,10 @@ class ZoomableView(QGraphicsView):
     def toggle_items_rotation(self):
         self.rotation_mode = not self.rotation_mode
 
-        if not self.rotation_mode:
-            self.disable_items_rotation()
-        else:
+        if self.rotation_mode:
             self.enable_items_rotation()
+        else:
+            self.disable_items_rotation()
 
 
 class SceneItem(QGraphicsEllipseItem):
@@ -252,8 +255,6 @@ class SceneItem(QGraphicsEllipseItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
-        self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
-
         # Create a text item for the rotation hint
         self.rotation_hint = QGraphicsSimpleTextItem("0°")
         self.rotation_hint.setZValue(1)  # Ensure it's on top of other items
@@ -264,6 +265,7 @@ class SceneItem(QGraphicsEllipseItem):
         view.scene().addItem(self.rotation_hint)  # Add hint directly to the scene
         self.rotation_hint.setVisible(False)  # Initially hide the hint
         self.update_hint_position()
+        self.upd_transform_origin()
 
         self.setPen(QPen(Qt.GlobalColor.white))  # Set border color
         gradient = QLinearGradient(0, 0, width, height)
@@ -283,15 +285,20 @@ class SceneItem(QGraphicsEllipseItem):
         return super().itemChange(change, value)
 
     def focusInEvent(self, event):
+        if self.isSelected() and self.view.scale_mode:
+            print("Focused item:", self)
+            self.view.enable_items_scaling()
         super().focusInEvent(event)
 
-        if self.view.scale_mode:
-            self.view.disable_items_scaling()
-            self.show_scale_points()
+    def mousePressEvent(self, event):
+        if not self.isSelected():
+            self.scene().clearSelection()
+            self.setSelected(True)
+            if self.view.scale_mode:
+                print("Selected item:", self)
+                self.view.enable_items_scaling()
 
-    def mouseReleaseEvent(self, event):
-        self.update_hint_position()
-        super().mouseReleaseEvent(event)
+        super().mousePressEvent(event)
 
     def show_hint(self):
         """Show the rotation hint."""
@@ -332,6 +339,8 @@ class SceneItem(QGraphicsEllipseItem):
 
     def hide_scale_points(self):
         """Remove all scale points from the scene."""
+        if not self.scale_points:
+            return
         for point in self.scale_points:
             point.setParentItem(None)  # Remove parent before deleting
             self.scene().removeItem(point)
@@ -367,6 +376,9 @@ class SceneItem(QGraphicsEllipseItem):
             if index < len(self.scale_points):
                 point = self.scale_points[index]
                 point.setRect(edge.x() - 5, edge.y() - 5, 10, 10)
+
+    def upd_transform_origin(self):
+        self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
 
 
 def main():
