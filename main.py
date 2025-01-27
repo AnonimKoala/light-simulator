@@ -286,13 +286,17 @@ class SceneItem(QGraphicsItem):
         self.height = height
         self.prepareGeometryChange()
 
+    def rect(self):
+        return QRectF(0, 0, self.width, self.height)
+
     def itemChange(self, change, value):
         """Override itemChange to track position changes."""
-        print(f"New position: {self.pos().x()} {self.pos().y()}")
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
+            print(f"New position: {self.pos().x()} {self.pos().y()}")
         return super().itemChange(change, value)
 
     def focusInEvent(self, event):
-        if self.isSelected() and self.view.scale_mode:
+        if self.isSelected() and self.view.scale_mode and not self.scale_points:
             print("Focused item:", self)
             self.view.enable_items_scaling()
         super().focusInEvent(event)
