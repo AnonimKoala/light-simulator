@@ -30,7 +30,7 @@ class ScalePoint(QGraphicsEllipseItem):
         rect = self.parent_item.rect()
 
         if self.direction is None:  # Corner scaling
-            if self.opposite_point:
+            if self.opposite_point is not None:
                 dx = current_pos.x() - self.opposite_point.x()
                 dy = current_pos.y() - self.opposite_point.y()
 
