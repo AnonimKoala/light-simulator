@@ -46,7 +46,31 @@ class ScalePoint(QGraphicsEllipseItem):
         current_pos = self.mapToParent(event.pos())
         rect = self.parent_item.rect()
 
-        if self.direction == "horizontal":
+        if self.direction is None:  # Corner scaling
+            if self.opposite_point:
+                dx = current_pos.x() - self.opposite_point.x()
+                dy = current_pos.y() - self.opposite_point.y()
+
+                # Maintain aspect ratio
+                if abs(dx) > abs(dy):
+                    new_width = abs(dx)
+                    new_height = new_width * (rect.height() / rect.width())
+                else:
+                    new_height = abs(dy)
+                    new_width = new_height * (rect.width() / rect.height())
+
+                if current_pos.x() < self.opposite_point.x():
+                    new_x = self.opposite_point.x() - new_width
+                else:
+                    new_x = self.opposite_point.x()
+
+                if current_pos.y() < self.opposite_point.y():
+                    new_y = self.opposite_point.y() - new_height
+                else:
+                    new_y = self.opposite_point.y()
+
+                self.parent_item.setRect(new_x, new_y, new_width, new_height)
+        elif self.direction == "horizontal":
             # Get the opposite horizontal point as fixed point
             if current_pos.x() > rect.center().x():
                 fixed_x = rect.left()  # If dragging right point, left is fixed
