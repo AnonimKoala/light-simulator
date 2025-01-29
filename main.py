@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import QApplication, QGraphicsScene
 import sys
 
-from graphic.base import ZoomableView, SceneItem
+from graphic.base import ZoomableView
 from graphic.config import SCENE_SIZE
-from graphic.items import EllipseItem, RectangleItem
+from graphic.items import EllipseItem, RectangleItem, CustomShapeItem
 
 
 def main():
@@ -18,13 +18,13 @@ def main():
     view.setWindowTitle("Light Simulator")
 
     ellipse1 = EllipseItem(-100, -50, 200, 100, view)
-    ellipse2 = EllipseItem(200, 200, 150, 75, view)
-    scene.addItem(ellipse1)
-    scene.addItem(ellipse2)
-
     rectangle = RectangleItem(50, 50, 150, 100, view)
+    scene.addItem(ellipse1)
     scene.addItem(rectangle)
 
+
+    cs = CustomShapeItem(-100, -100, 100, 200, view)
+    scene.addItem(cs)
     view.resize(800, 600)
     view.show()
 
