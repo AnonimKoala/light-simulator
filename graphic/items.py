@@ -64,11 +64,20 @@ class RectangleItem(QGraphicsRectItem, SceneItem):
 class CustomShapeItem(QGraphicsPathItem, SceneItem):
     """Custom shape item: Rectangle with half-width cut by an ellipse."""
 
-    def __init__(self, x, y, width, height, view):
+    def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView):
+        """
+        Initialize the CustomShapeItem.
+
+        :param x: float - X-coordinate of the item.
+        :param y: float - Y-coordinate of the item.
+        :param width: float - Width of the item.
+        :param height: float - Height of the item.
+        :param view: ZoomableView - The ZoomableView that contains this item.
+        """
         # Initialize parent classes
         QGraphicsPathItem.__init__(self)
         SceneItem.__init__(self, x, y, width, height, view)
-        self.setPos(x,y)
+        self.setPos(x, y)
 
         # Store initial dimensions
         self.original_width = width
@@ -85,8 +94,13 @@ class CustomShapeItem(QGraphicsPathItem, SceneItem):
         self.setBrush(QBrush(QColor(0, 0, 255)))  # Solid blue color
         self.setPen(QPen(QColor("white")))  # White outline for visibility
 
-    def update_path(self, width, height):
-        """Update the path based on the current width and height."""
+    def update_path(self, width: float, height: float):
+        """
+        Update the path based on the current width and height.
+
+        :param width: float - Width of the item.
+        :param height: float - Height of the item.
+        """
         rect_path = QPainterPath()
         rect_path.addRect(0, 0, width, height)  # Rectangle path
 
@@ -98,8 +112,15 @@ class CustomShapeItem(QGraphicsPathItem, SceneItem):
 
         self.setPath(final_path)
 
-    def setRect(self, x, y, width, height):
-        """Override setRect to update custom shape dimensions."""
+    def setRect(self, x: float, y: float, width: float, height: float):
+        """
+        Override setRect to update custom shape dimensions.
+
+        :param x: float - X-coordinate of the item.
+        :param y: float - Y-coordinate of the item.
+        :param width: float - Width of the item.
+        :param height: float - Height of the item.
+        """
         self.prepareGeometryChange()
 
         # Update position and dimensions
@@ -110,6 +131,10 @@ class CustomShapeItem(QGraphicsPathItem, SceneItem):
         self.width = width
         self.height = height
 
-    def rect(self):
-        """Return the bounding rectangle of the custom shape."""
+    def rect(self) -> QRectF:
+        """
+        Return the bounding rectangle of the custom shape.
+
+        :return: QRectF - The bounding rectangle of the custom shape.
+        """
         return QRectF(0, 0, self.width, self.height)
