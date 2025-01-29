@@ -1,8 +1,10 @@
 import math
+from typing import Any
 
 from PyQt6.QtCore import Qt, QRectF, QPointF
-from PyQt6.QtGui import QPainter, QBrush, QPen, QFont
-from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsSimpleTextItem
+from PyQt6.QtGui import QPainter, QBrush, QPen, QFont, QWheelEvent, QMouseEvent, QKeyEvent, QFocusEvent
+from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsSimpleTextItem, \
+    QGraphicsSceneMouseEvent, QGraphicsScene
 
 from graphic.config import FONT_SIZE
 from tools import convert_qt_angle2cartesian
@@ -11,7 +13,17 @@ from tools import convert_qt_angle2cartesian
 class ScalePoint(QGraphicsEllipseItem):
     """A small draggable point used for scaling."""
 
-    def __init__(self, x, y, parent_item, opposite_point=None, direction=None):
+    def __init__(self, x: float, y: float, parent_item: 'SceneItem', opposite_point: QPointF = None,
+                 direction: str = None):
+        """
+        Initialize a ScalePoint.
+
+        :param x: float - X-coordinate of the point.
+        :param y: float - Y-coordinate of the point.
+        :param parent_item: SceneItem - The parent item that this point will scale.
+        :param opposite_point: QPointF - The opposite point used for scaling.
+        :param direction: str - The direction of scaling ('horizontal' or 'vertical').
+        """
         super().__init__(x - 5, y - 5, 10, 10)  # Create a small circle
         self.setBrush(QBrush(Qt.GlobalColor.red))  # Red color for scale points
         self.setPen(QPen(Qt.GlobalColor.black))
@@ -21,9 +33,14 @@ class ScalePoint(QGraphicsEllipseItem):
         self.direction = direction  # Direction for scaling (horizontal/vertical)
         self.setZValue(2)  # Ensure scale points are always on top
 
-    def mouseMoveEvent(self, event):
-        """Handle dragging of the scale point to resize the parent item."""
-        if not self.parent_item.scene().views()[0].scale_mode:
+    def mouseMoveEvent(self, event: 'QGraphicsSceneMouseEvent'):
+        """
+        Handle dragging of the scale point to resize the parent item.
+
+        :param event: QGraphicsSceneMouseEvent - The mouse move event.
+        """
+        view = self.parent_item.scene().views()[0]
+        if isinstance(view, ZoomableView) and not view.scale_mode:
             return
 
         current_pos = self.mapToParent(event.pos())
@@ -93,7 +110,12 @@ class ScalePoint(QGraphicsEllipseItem):
 class ZoomableView(QGraphicsView):
     """Zoomable view with panning and scalability toggling."""
 
-    def __init__(self, scene):
+    def __init__(self, scene: QGraphicsScene):
+        """
+        Initialize the ZoomableView.
+
+        :param scene: QGraphicsScene - The QGraphicsScene to be displayed in the view.
+        """
         super().__init__(scene)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)  # Enable panning
@@ -110,8 +132,12 @@ class ZoomableView(QGraphicsView):
         self.start_rotation = None
         self.origin_pos = None
 
-    def keyPressEvent(self, event):
-        """Handle key press events for toggling scalability."""
+    def keyPressEvent(self, event: QKeyEvent):
+        """
+        Handle key press events for toggling scalability, moving, and rotation modes.
+
+        :param event: QKeyEvent - The key press event.
+        """
         if event.key() == Qt.Key.Key_S:  # Press 'S' to toggle scale mode for selected items
             self.toggle_items_scaling()
 
@@ -123,7 +149,12 @@ class ZoomableView(QGraphicsView):
 
             print("Rotation mode:", "ON" if self.rotation_mode else "OFF")
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
+        """
+        Handle mouse press events for initiating rotation.
+
+        :param event: QMouseEvent - The mouse press event.
+        """
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             item = self.itemAt(event.pos())
             if item and isinstance(item, SceneItem):
@@ -139,7 +170,12 @@ class ZoomableView(QGraphicsView):
                 self.selected_item.show_hint()
         super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent):
+        """
+        Handle mouse move events for rotating the selected item.
+
+        :param event: QMouseEvent - The mouse move event.
+        """
         if self.rotation_mode and self.selected_item:
             current_pos = self.mapToScene(event.pos())
             center_pos = self.selected_item.sceneBoundingRect().center()
@@ -174,7 +210,12 @@ class ZoomableView(QGraphicsView):
             )
         super().mouseMoveEvent(event)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """
+        Handle mouse release events to finalize rotation.
+
+        :param event: QMouseEvent - The mouse release event.
+        """
         if self.rotation_mode and event.button() == Qt.MouseButton.LeftButton:
             if self.selected_item:
                 print("Rotation ended")
@@ -185,7 +226,12 @@ class ZoomableView(QGraphicsView):
             self.selected_item = None
         super().mouseReleaseEvent(event)
 
-    def wheelEvent(self, event):
+    def wheelEvent(self, event: QWheelEvent):
+        """
+        Handle mouse wheel events for zooming in and out.
+
+        :param event: QWheelEvent - The mouse wheel event.
+        """
         zoom_factor = 1.15
         if event.angleDelta().y() > 0:
             self.scale(zoom_factor, zoom_factor)
@@ -197,6 +243,7 @@ class ZoomableView(QGraphicsView):
         self.update_hint_font()
 
     def update_hint_font(self):
+        """Update the font size of the rotation hint based on the current scale factor."""
         for item in self.scene().items():
             if isinstance(item, SceneItem):
                 item.font.setPointSize(int(FONT_SIZE / self.scale_factor))
@@ -204,11 +251,13 @@ class ZoomableView(QGraphicsView):
                 item.update_hint_position()
 
     def enable_items_moving(self):
+        """Enable moving mode for items."""
         self.disable_items_rotation()
         self.moving_mode = True
         self.update_items_move_state()
 
     def enable_items_scaling(self):
+        """Enable scaling mode for items."""
         self.disable_items_rotation()
         self.disable_items_scaling()
         self.scale_mode = True
@@ -217,21 +266,25 @@ class ZoomableView(QGraphicsView):
             selected_item.show_scale_points()
 
     def enable_items_rotation(self):
+        """Enable rotation mode for items."""
         self.disable_items_moving()
         self.disable_items_scaling()
         self.rotation_mode = True
 
     def disable_items_moving(self):
+        """Disable moving mode for items."""
         self.moving_mode = False
         self.update_items_move_state()
 
     def disable_items_scaling(self):
+        """Disable scaling mode for items."""
         self.scale_mode = False
         for item in self.scene().items():
             if isinstance(item, SceneItem):
                 item.hide_scale_points()
 
     def disable_items_rotation(self):
+        """Disable rotation mode for items."""
         self.rotation_mode = False
 
         for item in self.scene().items():
@@ -239,11 +292,13 @@ class ZoomableView(QGraphicsView):
                 item.hide_hint()
 
     def update_items_move_state(self):
+        """Update the movable state of items based on the current moving mode."""
         for item in self.items():
             if isinstance(item, SceneItem):
                 item.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, self.moving_mode)
 
     def toggle_items_moving(self):
+        """Toggle the moving mode for items."""
         self.moving_mode = not self.moving_mode
         if self.moving_mode:
             self.enable_items_moving()
@@ -251,6 +306,7 @@ class ZoomableView(QGraphicsView):
             self.disable_items_moving()
 
     def toggle_items_scaling(self):
+        """Toggle the scaling mode for items."""
         self.scale_mode = not self.scale_mode
 
         if self.scale_mode:
@@ -259,6 +315,7 @@ class ZoomableView(QGraphicsView):
             self.disable_items_scaling()
 
     def toggle_items_rotation(self):
+        """Toggle the rotation mode for items."""
         self.rotation_mode = not self.rotation_mode
 
         if self.rotation_mode:
@@ -270,7 +327,16 @@ class ZoomableView(QGraphicsView):
 class SceneItem(QGraphicsItem):
     """An ellipse that supports scaling with draggable points."""
 
-    def __init__(self, x, y, width, height, view: ZoomableView):
+    def __init__(self, x: float, y: float, width: float, height: float, view: 'ZoomableView'):
+        """
+        Initialize the SceneItem.
+
+        :param x: float - X-coordinate of the item.
+        :param y: float - Y-coordinate of the item.
+        :param width: float - Width of the item.
+        :param height: float - Height of the item.
+        :param view: ZoomableView - The ZoomableView that contains this item.
+        """
         super().__init__()
         self.setPos(x, y)  # Set position separately
         self.setRect(0, 0, width, height)
@@ -279,7 +345,7 @@ class SceneItem(QGraphicsItem):
         self.height = height
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable)  # Enable selection
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable selection
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsFocusable)  # Enable focus
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges)
 
         # Create a text item for the rotation hint
@@ -294,35 +360,63 @@ class SceneItem(QGraphicsItem):
         self.update_hint_position()
         self.update_transform_origin()
 
-        self.view = view  # scene
+        self.view = view  # Reference to the ZoomableView
 
         self.scale_points = []  # List of scale points (handles)
         self.scale_corners = []
         self.scale_edges = []
 
-    def setRect(self, x, y, width, height):
-        """Set the rectangle with the given position and size."""
+    def setRect(self, x: float, y: float, width: float, height: float):
+        """
+        Set the rectangle with the given position and size.
+
+        :param x: float - X-coordinate of the rectangle.
+        :param y: float - Y-coordinate of the rectangle.
+        :param width: float - Width of the rectangle.
+        :param height: float - Height of the rectangle.
+        """
         self.setPos(x, y)
         self.width = width
         self.height = height
         self.prepareGeometryChange()
 
-    def rect(self):
+    def rect(self) -> QRectF:
+        """
+        Get the rectangle representing the item's bounds.
+
+        :return: QRectF object representing the item's bounds.
+        """
         return QRectF(0, 0, self.width, self.height)
 
-    def itemChange(self, change, value):
-        """Override itemChange to track position changes."""
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
+        """
+        Override itemChange to track position changes.
+
+        :param change: QGraphicsItem.GraphicsItemChange - The type of change.
+        :param value: Any - The new value.
+        :return: Any - The result of the base class implementation.
+        """
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
             print(f"New position: {self.pos().x()} {self.pos().y()}")
         return super().itemChange(change, value)
 
-    def focusInEvent(self, event):
+    def focusInEvent(self, event: QFocusEvent):
+        """
+        Handle focus in events to enable scaling mode.
+
+        :param event: QFocusEvent - The focus in event.
+        """
         if self.isSelected() and self.view.scale_mode and not self.scale_points:
             print("Focused item:", self)
             self.view.enable_items_scaling()
         super().focusInEvent(event)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent):
+        """
+        Handle mouse press events to select the item and enable scaling mode.
+
+        :param event: QGraphicsSceneMouseEvent - The mouse press event.
+        """
         if not self.isSelected():
             self.scene().clearSelection()
             self.setSelected(True)
@@ -346,8 +440,12 @@ class SceneItem(QGraphicsItem):
         self.rotation_hint.setPos(center.x() - self.rotation_hint.boundingRect().width() / 2,
                                   center.y() - self.rotation_hint.boundingRect().height() / 2)
 
-    def update_hint_text(self, angle):
-        """Update the text of the rotation hint."""
+    def update_hint_text(self, angle: float | int):
+        """
+        Update the text of the rotation hint.
+
+        :param angle: float - The new rotation angle.
+        """
         self.rotation_hint.setText(f"{int(angle)}°")
 
     def show_scale_points(self):
@@ -379,6 +477,7 @@ class SceneItem(QGraphicsItem):
         self.scale_points.clear()
 
     def update_scale_contour(self):
+        """Update the positions of the scale points based on the object's size."""
         rect = self.rect()
 
         self.scale_corners = [
@@ -410,4 +509,5 @@ class SceneItem(QGraphicsItem):
                 point.setRect(edge.x() - 5, edge.y() - 5, 10, 10)
 
     def update_transform_origin(self):
+        """Set the rotation origin to the center of the bounding rectangle."""
         self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
