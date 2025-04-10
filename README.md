@@ -1,1 +1,1 @@
-Light Simulator
+Light Simulator Beta
