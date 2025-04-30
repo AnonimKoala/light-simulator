@@ -1,5 +1,8 @@
-from sympy import Point2D, cos, sin, pi
+from sympy import Point2D, Line, Point, cos, sin, pi, Ellipse, tan
+from sympy.abc import x, y
+
 from OpticsEngine.BasicObject import BasicObject
+from OpticsEngine.util import is_point_inside_polygon
 from OpticsEngine.LightRay import LightRay
 
 
@@ -11,26 +14,26 @@ class Len(BasicObject):
     DEFAULT_RADIUS = 5
     DEFAULT_HEIGHT = 20
 
-    def __init__(self, x, y):
+    def __init__(self, pos_x, pos_y):
         """
         Initializes an instance of the `Len` class.
 
-        :param x: X-coordinate of the lens
-        :type x: float
+        :param pos_x: X-coordinate of the lens
+        :type pos_x: float
 
-        :param y: Y-coordinate of the lens
-        :type y: float
+        :param pos_y: Y-coordinate of the lens
+        :type pos_y: float
         """
 
-        self._pos = Point2D(x, y)
+        self._pos = Point2D(pos_x, pos_y)
         self._height = Len.DEFAULT_HEIGHT
         self._rotation = pi / 2  # Rotation in radians about the OX axis
         self._d = Len.DEFAULT_RADIUS * 2  # The thickness of the len
         self._left_radius = Len.DEFAULT_RADIUS
         self._right_radius = Len.DEFAULT_RADIUS
 
-        self._left_curve = None
-        self._right_curve = None
+        self._left_curve_eq = None
+        self._right_curve_eq = None
         self._vertices = {}  # Stores boundary points of the lens
         self._curve_vertices = {}  # Stores middle top/bottom points of curves
 
@@ -49,23 +52,35 @@ class Len(BasicObject):
         h2sin = (self.height / 2) * sin(self.rotation)
         h2cos = (self.height / 2) * cos(self.rotation)
 
-        self._vertices = {  # Stores the vertices of the len
+        self._vertices: dict[str, Point2D] = {  # Stores the vertices of the len
             "top-left": Point2D(self.pos.x - d2cos - h2sin, self.pos.y - d2sin + h2cos),
             "top-right": Point2D(self.pos.x + d2cos - h2sin, self.pos.y + d2sin + h2cos),
             "bottom-left": Point2D(self.pos.x - d2cos + h2sin, self.pos.y - d2sin - h2cos),
             "bottom-right": Point2D(self.pos.x + d2cos + h2sin, self.pos.y + d2sin - h2cos),
         }
 
-        rest2d = (self.d - self.left_radius - self.right_radius) / 2
-        d2rest_cos = (self.d / 2 + rest2d) * cos(self.rotation)
-        d2rest_sin = (self.d / 2 + rest2d) * sin(self.rotation)
+        rest_d2 = (self.d - self.left_radius - self.right_radius) / 2
+        d2rest_cos = (self.d / 2 + rest_d2) * cos(self.rotation)
+        d2rest_sin = (self.d / 2 + rest_d2) * sin(self.rotation)
 
-        self._curve_vertices = {  # Stores middle top/bottom points of curves
+        self._curve_vertices: dict[str, Point2D] = {  # Stores middle top/bottom points of curves
             "left-top": Point2D(self.pos.x - d2rest_cos - h2sin, self.pos.y - d2rest_sin + h2cos),
             "left-bottom": Point2D(self.pos.x - d2rest_cos + h2sin, self.pos.y - d2rest_sin - h2cos),
             "right-top": Point2D(self.pos.x + d2rest_cos - h2sin, self.pos.y + d2rest_sin + h2cos),
             "right-bottom": Point2D(self.pos.x + d2rest_cos + h2sin, self.pos.y + d2rest_sin - h2cos),
         }
+
+        self._left_curve_eq = Ellipse(
+            self._curve_vertices["left-top"].midpoint(self._curve_vertices["left-bottom"]),
+            self._left_radius,
+            self._curve_vertices["left-top"].distance(self._curve_vertices["left-bottom"])
+        ).equation(x, y, _slope=tan(self.rotation))
+
+        self._right_curve_eq = Ellipse(
+            self._curve_vertices["right-top"].midpoint(self._curve_vertices["right-bottom"]),
+            self._right_radius,
+            self._curve_vertices["right-top"].distance(self._curve_vertices["right-bottom"])
+        ).equation(x, y, _slope=tan(self.rotation))
 
     def scale(self, scale_factor: float):
         """
