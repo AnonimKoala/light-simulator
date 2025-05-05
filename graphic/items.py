@@ -1,4 +1,5 @@
-from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen
+from PyQt6.QtCore import QRectF, Qt
+from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen, QPainter, QPainterPath
 from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
 
 from graphic.base import SceneItem, ZoomableView
@@ -58,3 +59,92 @@ class RectangleItem(QGraphicsRectItem, SceneItem):
 
         self.setBrush(QBrush(gradient))
         self.setPen(QPen(QColor("white")))
+
+
+class LenGraphicItem(SceneItem):
+    """
+    LenGraphicItem class represents a lens-shaped item in the scene. Inherits from SceneItem.
+    This class creates a graphical representation of a lens with customizable
+    left and right radii. Positive radius values create convex curves,
+    while negative values create concave curves.
+    """
+
+    def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView, left_radius: float,
+                 right_radius: float):
+        SceneItem.__init__(self, x, y, width, height, view)
+        self.setBrush(QBrush(QColor(0, 128, 128)))
+        self.setPen(QPen(QColor("white")))
+        self.left_radius = left_radius
+        self.right_radius = right_radius
+
+    def boundingRect(self) -> QRectF:
+        return QRectF(0, 0, self.width, self.height)
+
+    def paint(self, painter: QPainter, option, widget=None):
+        # Calculate the starting x position and width of the central rectangle,
+        # adjusting for positive left and right radii (convex lens sides).
+        rect_x, rect_width = 0, self.width
+
+        if self.right_radius > 0:
+            rect_width -= self.right_radius
+        if self.left_radius > 0:
+            rect_x = self.left_radius
+            rect_width -= self.left_radius
+
+        # Create a rectangle path representing the lens's body area.
+        rect = QRectF(rect_x, 0, rect_width, self.height)
+        path = QPainterPath()
+        path.addRect(rect)
+
+        # Handle the right side of the lens:
+        # - If right_radius < 0, subtract a concave half-ellipse from the right.
+        # - If right_radius > 0, add a convex half-ellipse to the right.
+        if self.right_radius < 0:
+            ellipse_x = self.width + self.right_radius
+            ellipse_rect = QRectF(ellipse_x, 0, self.right_radius * -2, self.height)
+            half_ellipse = QPainterPath()
+            half_ellipse.moveTo(ellipse_x - self.right_radius, self.height)
+            half_ellipse.arcTo(ellipse_rect, 90, 180)
+            path = path.subtracted(half_ellipse)
+        elif self.right_radius > 0:
+            ellipse_x = self.width - 2 * self.right_radius
+            ellipse_rect = QRectF(ellipse_x, 0, self.right_radius * 2, self.height)
+            half_ellipse = QPainterPath()
+            half_ellipse.moveTo(ellipse_x + self.right_radius, self.height)
+            half_ellipse.arcTo(ellipse_rect, 90, -180)
+            path = path.united(half_ellipse)
+
+        # Handle the left side of the lens:
+        # - If left_radius < 0, subtract a concave half-ellipse from the left.
+        # - If left_radius > 0, add a convex half-ellipse to the left.
+        if self.left_radius < 0:
+            ellipse_x = 0
+            ellipse_rect = QRectF(ellipse_x + self.left_radius, 0, self.left_radius * -2, self.height)
+            half_ellipse = QPainterPath()
+            half_ellipse.moveTo(ellipse_x, self.height)
+            half_ellipse.arcTo(ellipse_rect, 90, -180)
+            path = path.subtracted(half_ellipse)
+        elif self.left_radius > 0:
+            ellipse_x = -self.left_radius
+            ellipse_rect = QRectF(ellipse_x + self.left_radius, 0, self.left_radius * 2, self.height)
+            half_ellipse = QPainterPath()
+            half_ellipse.moveTo(ellipse_x + 2 * self.left_radius, self.height)
+            half_ellipse.arcTo(ellipse_rect, 90, 180)
+            path = path.united(half_ellipse)
+
+        # Draw the final lens shape with no outline and the current brush.
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self.brush())
+        painter.drawPath(path)
+
+    def setBrush(self, brush):
+        self._brush = brush
+
+    def brush(self):
+        return getattr(self, "_brush", QBrush(QColor(0, 128, 128)))
+
+    def setPen(self, pen):
+        self._pen = pen
+
+    def pen(self):
+        return getattr(self, "_pen", QPen(QColor("white")))
