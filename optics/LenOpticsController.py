@@ -1,12 +1,12 @@
 from sympy import Point2D, Line, Point, cos, sin, pi, Ellipse, tan
 from sympy.abc import x, y
 
-from OpticsEngine.BasicObject import BasicObject
-from OpticsEngine.util import is_point_inside_polygon
-from OpticsEngine.LightRay import LightRay
+from optics.BasicObject import BasicObject
+from optics.util import is_point_inside_polygon
+from optics.LightRay import LightRay
 
 
-class Len(BasicObject):
+class LenOpticsController(BasicObject):
     """
     The class allows creating lenses.
     """
@@ -26,11 +26,11 @@ class Len(BasicObject):
         """
 
         self._pos = Point2D(pos_x, pos_y)
-        self._height = Len.DEFAULT_HEIGHT
+        self._height = LenOpticsController.DEFAULT_HEIGHT
         self._rotation = pi / 2  # Rotation in radians about the OX axis
-        self._d = Len.DEFAULT_RADIUS * 2  # The thickness of the len
-        self._left_radius = Len.DEFAULT_RADIUS
-        self._right_radius = Len.DEFAULT_RADIUS
+        self._d = LenOpticsController.DEFAULT_RADIUS * 2  # The thickness of the len
+        self._left_radius = LenOpticsController.DEFAULT_RADIUS
+        self._right_radius = LenOpticsController.DEFAULT_RADIUS
 
         self._left_curve_eq = None
         self._right_curve_eq = None
@@ -81,6 +81,12 @@ class Len(BasicObject):
             self._right_radius,
             self._curve_vertices["right-top"].distance(self._curve_vertices["right-bottom"])
         ).equation(x, y, _slope=tan(self.rotation))
+        # todo check if the equation is correct, the rotation is correct
+        # todo Update the equations of the sides
+
+
+
+
 
     def scale(self, scale_factor: float):
         """
