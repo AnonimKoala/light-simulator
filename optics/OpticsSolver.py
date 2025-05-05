@@ -1,5 +1,5 @@
 import sympy as sp
-from .Ray import LightRay
+from optics.LightRay import LightRay
 
 
 class OpticsSolver:

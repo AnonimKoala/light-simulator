@@ -1,7 +1,6 @@
 from .Geometry import Point, Straight, Figure
 from .Material import Material
 from .OpticsSolver import OpticsSolver
-from .Ray import LightRay
 import sympy as sp
 
 

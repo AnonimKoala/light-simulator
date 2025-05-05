@@ -1,6 +1,6 @@
 import sympy as sp
-from .Ray import LightRay
 from .Geometry import Point
+from .LightRay import LightRay
 from .OpticsSolver import OpticsSolver
 
 
