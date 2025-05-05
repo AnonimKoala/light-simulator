@@ -373,7 +373,7 @@ class SceneItem(QGraphicsItem):
         :return: Any - The result of the base class implementation.
         """
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
-            print(f"New position: {self.pos().x()} {self.pos().y()}")
+            print(f"New position: Absolute {self.pos()} | Relative {value} | Mapped to scene {self.mapToScene(value)}")
         return super().itemChange(change, value)
 
     def focusInEvent(self, event: QFocusEvent):
