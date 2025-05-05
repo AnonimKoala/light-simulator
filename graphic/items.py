@@ -51,13 +51,7 @@ class RectangleItem(QGraphicsRectItem, SceneItem):
         """
         QGraphicsRectItem.__init__(self, 0, 0, width, height)
         SceneItem.__init__(self, x, y, width, height, view)
-
-        # Set appearance
-        gradient = QLinearGradient(0, 0, width, height)
-        gradient.setColorAt(0.0, QColor(0, 0, 255))  # Blue
-        gradient.setColorAt(1.0, QColor(0, 255, 255))  # Cyan
-
-        self.setBrush(QBrush(gradient))
+        self.setBrush(QBrush(QColor("green")))
         self.setPen(QPen(QColor("white")))
 
 
@@ -74,7 +68,6 @@ class LenGraphicItem(SceneItem):
         SceneItem.__init__(self, x, y, width, height, view)
         self.setPos(x, y)
         self._brush = QBrush(QColor(0, 128, 128))
-        self._pen = QPen(QColor("white"))
         self.left_radius = left_radius
         self.right_radius = right_radius
 
