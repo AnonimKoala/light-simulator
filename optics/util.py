@@ -19,10 +19,3 @@ def is_point_inside_polygon(point, polygon):
             if y2 <= y and (x2 - x1) * (y - y1) - (x - x1) * (y2 - y1) < 0:
                 wn -= 1
     return wn != 0
-
-
-print(
-    is_point_inside_polygon([-5, 2.1], [
-        [-5, 5], [-5, -5], [5, -5], [5, 5], [-7, 7], [-7, 3], [-5, 3], [-5, 7], [-7, 5]
-    ])
-)
