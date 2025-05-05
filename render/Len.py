@@ -10,7 +10,7 @@ from optics.LenOpticsController import LenOpticsController
 
 class Len(LenGraphicItem):
     def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView, left_radius: float, right_radius: float):
-        self.controller = LenOpticsController(x, y)
+        self.controller = LenOpticsController(x, y, left_radius, right_radius)
         super().__init__(x, y, width, height, view, left_radius, right_radius)
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:

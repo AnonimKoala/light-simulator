@@ -11,10 +11,10 @@ class LenOpticsController(BasicObject):
     The class allows creating lenses.
     """
 
-    DEFAULT_RADIUS = 5
-    DEFAULT_HEIGHT = 20
+    DEFAULT_RADIUS = 20
+    DEFAULT_HEIGHT = 100
 
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, left_radius=DEFAULT_RADIUS, right_radius=DEFAULT_RADIUS):
         """
         Initializes an instance of the `Len` class.
 
@@ -28,9 +28,9 @@ class LenOpticsController(BasicObject):
         self._pos = Point2D(pos_x, pos_y)
         self._height = LenOpticsController.DEFAULT_HEIGHT
         self._rotation = pi / 2  # Rotation in radians about the OX axis
-        self._d = LenOpticsController.DEFAULT_RADIUS * 2  # The thickness of the len
-        self._left_radius = LenOpticsController.DEFAULT_RADIUS
-        self._right_radius = LenOpticsController.DEFAULT_RADIUS
+        self._d = abs(left_radius) + abs(right_radius)  # The thickness of the len
+        self._left_radius = left_radius
+        self._right_radius = right_radius
 
         self._left_curve_eq = None
         self._right_curve_eq = None
@@ -83,10 +83,6 @@ class LenOpticsController(BasicObject):
         ).equation(x, y, _slope=tan(self.rotation))
         # todo check if the equation is correct, the rotation is correct
         # todo Update the equations of the sides
-
-
-
-
 
     def scale(self, scale_factor: float):
         """
