@@ -1,5 +1,5 @@
-from PyQt6.QtCore import QRectF, Qt
-from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen, QPainter, QPainterPath
+from PyQt6.QtCore import QRectF, Qt, QPointF
+from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen, QPainter, QPainterPath, QPolygonF
 from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
 
 from graphic.base import SceneItem, ZoomableView
@@ -72,8 +72,9 @@ class LenGraphicItem(SceneItem):
     def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView, left_radius: float,
                  right_radius: float):
         SceneItem.__init__(self, x, y, width, height, view)
-        self.setBrush(QBrush(QColor(0, 128, 128)))
-        self.setPen(QPen(QColor("white")))
+        self.setPos(x, y)
+        self._brush = QBrush(QColor(0, 128, 128))
+        self._pen = QPen(QColor("white"))
         self.left_radius = left_radius
         self.right_radius = right_radius
 
@@ -137,14 +138,33 @@ class LenGraphicItem(SceneItem):
         painter.setBrush(self.brush())
         painter.drawPath(path)
 
-    def setBrush(self, brush):
-        self._brush = brush
-
     def brush(self):
         return getattr(self, "_brush", QBrush(QColor(0, 128, 128)))
 
-    def setPen(self, pen):
-        self._pen = pen
 
-    def pen(self):
-        return getattr(self, "_pen", QPen(QColor("white")))
+class TriangleItem(SceneItem):
+    """
+    TriangleItem class represents a triangle shape in the scene.
+    Inherits from QGraphicsItem and SceneItem.
+    """
+    def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView):
+        SceneItem.__init__(self, x, y, width, height, view)
+        self.setPos(x, y)
+        self._brush = QBrush(QColor("orange"))
+        self._pen = QPen(QColor("white"))
+
+    def boundingRect(self) -> QRectF:
+        # The bounding rectangle for the triangle
+        return QRectF(0, 0, self.width, self.height)
+
+    def paint(self, painter, option, widget=None):
+        # Define the three points of the triangle (upright, filling the bounding rect)
+        points = [
+            QPointF(self.width / 2, 0),               # Top center
+            QPointF(self.width, self.height),         # Bottom right
+            QPointF(0, self.height)                   # Bottom left
+        ]
+        polygon = QPolygonF(points)
+        painter.setBrush(self._brush)
+        painter.setPen(self._pen)
+        painter.drawPolygon(polygon)
