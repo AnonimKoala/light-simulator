@@ -153,9 +153,9 @@ class TriangleItem(SceneItem):
     def paint(self, painter, option, widget=None):
         # Define the three points of the triangle (upright, filling the bounding rect)
         points = [
-            QPointF(self.width / 2, 0),               # Top center
-            QPointF(self.width, self.height),         # Bottom right
-            QPointF(0, self.height)                   # Bottom left
+            QPointF(self.width / 2, self.height),   # Top center
+            QPointF(self.width, 0),                 # Bottom right
+            QPointF(0, 0)                           # Bottom left
         ]
         polygon = QPolygonF(points)
         painter.setBrush(self._brush)

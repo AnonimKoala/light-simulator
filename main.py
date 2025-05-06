@@ -15,6 +15,7 @@ def main():
 
     # Create a zoomable view and set the scene
     view = ZoomableView(scene)
+    view.scale(1, -1)
     view.setWindowTitle("Light Simulator")
 
     ellipse1 = EllipseItem(-100, -50, 200, 100, view)
