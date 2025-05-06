@@ -145,6 +145,7 @@ class TriangleItem(SceneItem):
         self.setPos(x, y)
         self._brush = QBrush(QColor("orange"))
         self._pen = QPen(QColor("white"))
+        self.vertices = []
 
     def boundingRect(self) -> QRectF:
         # The bounding rectangle for the triangle
@@ -152,12 +153,12 @@ class TriangleItem(SceneItem):
 
     def paint(self, painter, option, widget=None):
         # Define the three points of the triangle (upright, filling the bounding rect)
-        points = [
+        self.vertices = [
             QPointF(self.width / 2, self.height),   # Top center
             QPointF(self.width, 0),                 # Bottom right
             QPointF(0, 0)                           # Bottom left
         ]
-        polygon = QPolygonF(points)
+        polygon = QPolygonF(self.vertices)
         painter.setBrush(self._brush)
         painter.setPen(self._pen)
         painter.drawPolygon(polygon)

@@ -1,45 +1,36 @@
+from .BasicObject import BasicObject
 from .Geometry import Point, Straight, Figure
 from .Material import Material
 from .OpticsSolver import OpticsSolver
 import sympy as sp
 
 
-class Mirror:
+class MirrorOpticsController(BasicObject):
     """
     The `Mirror` class allows the creation of mirrors.
     """
 
-    # Default size
-    DEF_SIZE = 1
-
-    # Default width
     DEF_WIDTH = 20
-
-    # Default height
     DEF_HEIGHT = 60
 
-    def __init__(self, x, y, rotation=0):
+    def __init__(self, x: float, y: float, width: float = DEF_WIDTH, height: float = DEF_HEIGHT):
         """
         Initializes an instance of the `Mirror` class.
 
         :param x: X-coordinate of the center
-        :type x: float
-
         :param y: Y-coordinate of the center
-        :type y: float
-
-        :param rotation: Inclination to the OX axis
-        :type rotation: float
+        :param width: Width of the mirror
+        :param height: Height of the mirror
         """
 
         # Set the default width of the mirror
-        self.width = Mirror.DEF_SIZE * Mirror.DEF_WIDTH
+        self.width = width
 
         # Set the default height of the mirror
-        self.height = Mirror.DEF_SIZE * Mirror.DEF_HEIGHT
+        self.height = height
 
         # Set the rotation angle of the mirror
-        self.rotation = rotation
+        self.rotation = 0
 
         # Set the position of the mirror
         self.pos = Point(x, y)
@@ -59,11 +50,14 @@ class Mirror:
         self.id = OpticsSolver.getNextID()
         OpticsSolver.MIRRORS.append(self)
 
+    def get_collision_point(self, ray):
+        pass
+
     def calcCoords(self):
         """
         Calculates and updates the coordinates of the vertices.
         """
-
+        return
         self.coords = [
             sp.solve((self.getLeftEq(), self.getBtmEq()), (Figure.x, Figure.y)),
             sp.solve((self.getLeftEq(), self.getTopEq()), (Figure.x, Figure.y)),
