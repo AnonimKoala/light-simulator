@@ -326,7 +326,8 @@ class SceneItem(QGraphicsItem):
 
         # Create a text item for the rotation hint
         self.rotation_hint = QGraphicsSimpleTextItem("0°")
-        self.rotation_hint.setZValue(1)  # Ensure it's on top of other items
+        self.rotation_hint.setFlag(QGraphicsSimpleTextItem.GraphicsItemFlag.ItemIgnoresTransformations)
+        self.rotation_hint.setZValue(3)  # Ensure it's on top of other items
         self.rotation_hint.setBrush(QBrush(Qt.GlobalColor.white))  # Set text color to white
         self.font = QFont("Arial", FONT_SIZE)  # Default font size
         self.rotation_hint.setFont(self.font)
