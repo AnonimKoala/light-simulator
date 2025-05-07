@@ -211,7 +211,7 @@ class RayGraphicItem(QGraphicsItem):
 
     @property
     def end_point(self):
-        if self._end_point:
+        if self._end_point is not None:
             return self._end_point
         angle_deg = self.parent.rotation() if self.parent else 0
         angle_rad = angle_deg * pi / 180
