@@ -1,8 +1,8 @@
-from sympy import Point2D, Line, Point, cos, sin, pi, Ellipse, tan
+from sympy import Point2D, cos, sin, pi, Ellipse, tan
 from sympy.abc import x, y
 
 from optics.BasicObject import BasicObject
-from optics.util import is_point_inside_polygon
+from optics.Solver import Solver
 from optics.LightRay import LightRay
 
 
@@ -38,8 +38,9 @@ class LenOpticsController(BasicObject):
         self._curve_vertices = {}  # Stores middle top/bottom points of curves
 
         self.calc()
+        Solver.optical_objects.append(self)
 
-    def get_collision_point(self, ray: LightRay) -> Point2D:
+    def get_collisions(self, ray: LightRay) -> Point2D:
         pass
 
     def calc(self):

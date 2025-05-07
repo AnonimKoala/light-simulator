@@ -4,6 +4,8 @@ from .Material import Material
 from .OpticsSolver import OpticsSolver
 import sympy as sp
 
+from .Solver import Solver
+
 
 class MirrorOpticsController(BasicObject):
     """
@@ -48,9 +50,9 @@ class MirrorOpticsController(BasicObject):
 
         # Assign a unique ID to the mirror and add it to the list of mirrors in the OpticsSolver
         self.id = OpticsSolver.getNextID()
-        OpticsSolver.MIRRORS.append(self)
+        Solver.optical_objects.append(self)
 
-    def get_collision_point(self, ray):
+    def get_collisions(self, ray):
         pass
 
     def calcCoords(self):
@@ -183,4 +185,3 @@ class MirrorOpticsController(BasicObject):
                     mirrorTangentEq = mEq
 
         return [mirrorTangentEq, mirrorTangent]
-
