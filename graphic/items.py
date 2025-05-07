@@ -1,9 +1,9 @@
 from PyQt6.QtCore import QRectF, Qt, QPointF
 from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen, QPainter, QPainterPath, QPolygonF
-from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem
-
+from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItem
+from sympy import pi, cos, sin
 from graphic.base import SceneItem, ZoomableView
-
+from conf import RAY_MAX_LENGTH, RAY_PEN_WIDTH
 
 class EllipseItem(QGraphicsEllipseItem, SceneItem):
     """
@@ -140,6 +140,7 @@ class TriangleItem(SceneItem):
     TriangleItem class represents a triangle shape in the scene.
     Inherits from QGraphicsItem and SceneItem.
     """
+
     def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView):
         SceneItem.__init__(self, x, y, width, height, view)
         self.setPos(x, y)
@@ -154,11 +155,75 @@ class TriangleItem(SceneItem):
     def paint(self, painter, option, widget=None):
         # Define the three points of the triangle (upright, filling the bounding rect)
         self.vertices = [
-            QPointF(self.width / 2, self.height),   # Top center
-            QPointF(self.width, 0),                 # Bottom right
-            QPointF(0, 0)                           # Bottom left
+            QPointF(self.width / 2, self.height),  # Top center
+            QPointF(self.width, 0),  # Bottom right
+            QPointF(0, 0)  # Bottom left
         ]
         polygon = QPolygonF(self.vertices)
         painter.setBrush(self._brush)
         painter.setPen(self._pen)
         painter.drawPolygon(polygon)
+
+
+class RayGraphicItem(QGraphicsItem):
+    """
+    LineItem class represents a line shape in the scene.
+    Inherits from QGraphicsItem.
+    """
+
+    def __init__(self, start_point: QPointF, view: ZoomableView, parent=None):
+        """
+        Initialize the LineItem.
+        :param start_point: The starting point of the line.
+        :param view: The ZoomableView that contains this item.
+        :param parent: Laser, if the line is a direct ray from the laser
+        :type parent: Laser | None
+        """
+        super().__init__()
+        self._parent = parent
+        self._start_point = start_point
+        self.setZValue(1)
+        self.pen_width = RAY_PEN_WIDTH
+        self._end_point = None
+        view.scene().addItem(self)
+
+    def boundingRect(self):
+        rect = QRectF(self.start_point, self.end_point).normalized()
+        return rect.adjusted(-self.pen_width, -self.pen_width, self.pen_width, self.pen_width)
+
+    def paint(self, painter, option, widget=None):
+        gradient = QLinearGradient(self.start_point, self.end_point)
+        gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
+        gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
+        pen = QPen(QBrush(gradient), self.pen_width)
+        painter.setPen(pen)
+        painter.drawLine(self.start_point, self.end_point)
+
+    def rerender(self):
+        self.prepareGeometryChange()
+        self.update()
+
+    @property
+    def start_point(self):
+        if not self.parent:
+            return self._start_point
+        return self.parent.source_point
+
+    @property
+    def end_point(self):
+        if self._end_point:
+            return self._end_point
+        angle_deg = self.parent.rotation() if self.parent else 0
+        angle_rad = angle_deg * pi / 180
+        end_x = self.start_point.x() + RAY_MAX_LENGTH * cos(angle_rad)
+        end_y = self.start_point.y() + RAY_MAX_LENGTH * sin(angle_rad)
+        return QPointF(end_x, end_y)
+
+    @end_point.setter
+    def end_point(self, value):
+        self._end_point = value
+        self.rerender()
+
+    @property
+    def parent(self):
+        return self._parent
