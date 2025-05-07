@@ -5,6 +5,7 @@ from sympy import pi, cos, sin
 from graphic.base import SceneItem, ZoomableView
 from conf import RAY_MAX_LENGTH, RAY_PEN_WIDTH
 
+
 class EllipseItem(QGraphicsEllipseItem, SceneItem):
     """
     EllipseItem class represents an ellipse shape in the scene.
@@ -184,24 +185,44 @@ class RayGraphicItem(QGraphicsItem):
         self._start_point = start_point
         self.setZValue(1)
         self.pen_width = RAY_PEN_WIDTH
-        self._end_point = None
-        view.scene().addItem(self)
+        self._inf_point = None
+        self._path_points: list[QPointF] = []
+        self.view = view
+        self.view.scene().addItem(self)
+
+    def __del__(self):
+        if self._parent:
+            self._parent.rays.remove(self)
+        self.view.scene().removeItem(self)
 
     def boundingRect(self):
-        rect = QRectF(self.start_point, self.end_point).normalized()
+        rect = QRectF(self.start_point, self.inf_point).normalized()
         return rect.adjusted(-self.pen_width, -self.pen_width, self.pen_width, self.pen_width)
 
     def paint(self, painter, option, widget=None):
-        gradient = QLinearGradient(self.start_point, self.end_point)
+        if len(self.path_points) > 0:
+            for i in range(1, len(self.path_points) - 1):
+                painter.setPen(QPen(QBrush(QColor(255, 0, 0), self.pen_width)))
+                painter.drawLine(self.path_points[i - 1], self.path_points[i])
+        gradient = QLinearGradient(self.start_point, self.inf_point)
         gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
         gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
         pen = QPen(QBrush(gradient), self.pen_width)
         painter.setPen(pen)
-        painter.drawLine(self.start_point, self.end_point)
+        painter.drawLine(self.start_point, self.inf_point)
 
     def rerender(self):
         self.prepareGeometryChange()
         self.update()
+
+    @property
+    def path_points(self):
+        return self._path_points
+
+    @path_points.setter
+    def path_points(self, value):
+        self._path_points = value
+        self.rerender()
 
     @property
     def start_point(self):
@@ -210,20 +231,26 @@ class RayGraphicItem(QGraphicsItem):
         return self.parent.source_point
 
     @property
-    def end_point(self):
-        if self._end_point is not None:
-            return self._end_point
-        angle_deg = self.parent.rotation() if self.parent else 0
-        angle_rad = angle_deg * pi / 180
-        end_x = self.start_point.x() + RAY_MAX_LENGTH * cos(angle_rad)
-        end_y = self.start_point.y() + RAY_MAX_LENGTH * sin(angle_rad)
+    def inf_point(self):
+        if self._inf_point is not None:
+            return self._inf_point
+        end_x = self.start_point.x() + RAY_MAX_LENGTH * cos(self.angle_rad)
+        end_y = self.start_point.y() + RAY_MAX_LENGTH * sin(self.angle_rad)
         return QPointF(end_x, end_y)
 
-    @end_point.setter
-    def end_point(self, value):
-        self._end_point = value
+    @inf_point.setter
+    def inf_point(self, value):
+        self._inf_point = value
         self.rerender()
 
     @property
     def parent(self):
         return self._parent
+
+    @property
+    def angle_deg(self):
+        return self.parent.rotation() if self.parent else 0
+
+    @property
+    def angle_rad(self):
+        return self.angle_deg * pi / 180
