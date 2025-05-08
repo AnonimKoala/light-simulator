@@ -10,7 +10,7 @@ class BasicObject(ABC):
     """
 
     @abstractmethod
-    def get_collisions(self, ray) -> list[Point2D]:
+    def get_collision(self, ray) -> Point2D | None:
         """
         Detects the collision of a ray with the object.
         :param ray: The ray to check for collisions with

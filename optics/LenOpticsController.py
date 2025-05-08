@@ -40,7 +40,7 @@ class LenOpticsController(BasicObject):
         self.calc()
         Solver.optical_objects.append(self)
 
-    def get_collisions(self, ray: LightRay) -> Point2D:
+    def get_collision(self, ray: LightRay) -> Point2D:
         pass
 
     def calc(self):

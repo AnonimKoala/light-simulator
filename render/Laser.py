@@ -4,6 +4,7 @@ from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QGraphicsItem
 from graphic.base import ZoomableView
 from graphic.items import RectangleItem
+from optics.Solver import Solver
 from render.Ray import Ray
 
 
@@ -15,6 +16,7 @@ class Laser(RectangleItem):
         self.rays = [
             Ray(self.source_point, view, self),
         ]
+        Solver.lasers.append(self)
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange or change == QGraphicsItem.GraphicsItemChange.ItemRotationChange:
