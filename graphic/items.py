@@ -213,7 +213,7 @@ class RayGraphicItem(QGraphicsItem):
         gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
         pen = QPen(QBrush(gradient), self.pen_width)
         if len(self.path_points) > 0:
-            for i in range(1, len(self.path_points)-1):
+            for i in range(1, len(self.path_points) - 1):
                 painter.setPen(QPen(QColor(255, 0, 0), self.pen_width))
                 painter.drawLine(self.path_points[i - 1], self.path_points[i])
             painter.setPen(pen)
