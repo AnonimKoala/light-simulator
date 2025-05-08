@@ -15,4 +15,5 @@ class Mirror(RectangleItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange or change == QGraphicsItem.GraphicsItemChange.ItemRotationChange:
             self.controller.pos = self.center_pos()
             self.controller.rotation = self.rotation()
+            Laser.recalc_all()
         return super().itemChange(change, value)

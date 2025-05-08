@@ -9,6 +9,13 @@ from render.Ray import Ray
 
 
 class Laser(RectangleItem):
+
+    @staticmethod
+    def recalc_all():
+        for laser in Solver.lasers:
+            for ray in laser.rays:
+                ray.calc()
+
     def __init__(self, x: float, y: float, size: float, view: ZoomableView):
         super().__init__(x, y, size * 2, size, view)
         self.setBrush(QBrush(QColor("purple")))
