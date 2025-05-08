@@ -191,9 +191,17 @@ class RayGraphicItem(QGraphicsItem):
         self.view.scene().addItem(self)
 
     def __del__(self):
-        if self._parent:
-            self._parent.rays.remove(self)
-        self.view.scene().removeItem(self)
+        try:
+            if self._parent and hasattr(self._parent, "rays"):
+                self._parent.rays.remove(self)
+                if hasattr(self, "view") and self.view is not None:
+                    scene = getattr(self.view, "scene", None)
+                    if callable(scene):
+                        s = scene()
+                        if s is not None:
+                            s.removeItem(self)
+        except RuntimeError:
+            pass
 
     def boundingRect(self):
         rect = QRectF(self.start_point, self.inf_point).normalized()
