@@ -8,5 +8,5 @@ class PrizmController(BasicObject):
     def __init__(self, x: float, y: float, vertices: list[QPointF]):
         Solver.optical_objects.append(self)
 
-    def get_collisions(self, ray):
+    def get_collision(self, ray):
         pass

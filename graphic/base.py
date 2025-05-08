@@ -488,3 +488,7 @@ class SceneItem(QGraphicsItem):
     def update_transform_origin(self):
         """Set the rotation origin to the center of the bounding rectangle."""
         self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
+
+    def center_pos(self):
+        """Get the center position of the item."""
+        return self.mapToScene(self.boundingRect().center())

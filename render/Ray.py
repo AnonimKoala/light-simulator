@@ -16,13 +16,16 @@ class Ray(RayGraphicItem):
 
     def update_props(self):
         self.controller.update_props(self.start_point, self.angle_deg)
+        self.calc()
+
+    def calc(self):
         refractions = self.controller.get_refractions()
         if refractions is None:
             self.path_points = []
         else:
             self.path_points = [
                 self.start_point,
-                *refractions,
+                QPointF(refractions.x, refractions.y),
                 self.inf_point
             ]
         self.rerender()
