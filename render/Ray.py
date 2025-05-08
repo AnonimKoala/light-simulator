@@ -25,7 +25,7 @@ class Ray(RayGraphicItem):
         else:
             self.path_points = [
                 self.start_point,
-                *refractions,
+                QPointF(refractions.x, refractions.y),
                 self.inf_point
             ]
         self.rerender()
