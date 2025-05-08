@@ -2,11 +2,11 @@ from sympy import Point2D, cos, sin, pi, Ellipse, tan
 from sympy.abc import x, y
 
 from optics.BasicObject import BasicObject
+from optics.RayController import RayController
 from optics.Solver import Solver
-from optics.LightRay import LightRay
 
 
-class LenOpticsController(BasicObject):
+class LenController(BasicObject):
     """
     The class allows creating lenses.
     """
@@ -26,7 +26,7 @@ class LenOpticsController(BasicObject):
         """
 
         self._pos = Point2D(pos_x, pos_y)
-        self._height = LenOpticsController.DEFAULT_HEIGHT
+        self._height = LenController.DEFAULT_HEIGHT
         self._rotation = pi / 2  # Rotation in radians about the OX axis
         self._d = abs(left_radius) + abs(right_radius)  # The thickness of the len
         self._left_radius = left_radius
@@ -40,7 +40,7 @@ class LenOpticsController(BasicObject):
         self.calc()
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: LightRay) -> Point2D:
+    def get_collision(self, ray: RayController) -> Point2D:
         pass
 
     def calc(self):

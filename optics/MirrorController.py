@@ -6,7 +6,7 @@ from .RayController import RayController
 from .Solver import Solver
 
 
-class MirrorOpticsController(BasicObject):
+class MirrorController(BasicObject):
     """
     The `Mirror` class allows the creation of mirrors.
     """
