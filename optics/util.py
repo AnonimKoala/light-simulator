@@ -30,3 +30,6 @@ def round_and_float(value):
 
 def deg2rad(deg):
     return deg * (pi / 180.0)
+
+def rad2deg(rad):
+    return rad * (180.0 / pi)
