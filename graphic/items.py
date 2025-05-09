@@ -209,6 +209,7 @@ class RayGraphicItem(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         gradient = QLinearGradient(self.start_point, self.inf_point)
+        gradient.setColorAt(0, QColor(255, 255, 0, 255))
         gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
         gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
         pen = QPen(QBrush(gradient), self.pen_width)
@@ -216,8 +217,13 @@ class RayGraphicItem(QGraphicsItem):
             for i in range(1, len(self.path_points) - 1):
                 painter.setPen(QPen(QColor(255, 0, 0), self.pen_width))
                 painter.drawLine(self.path_points[i - 1], self.path_points[i])
+            gradient = QLinearGradient(self.path_points[-2], self.path_points[-1])
+            gradient.setColorAt(0, QColor(255, 255, 0, 255))
+            gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
+            gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
+            pen = QPen(QBrush(gradient), self.pen_width)
             painter.setPen(pen)
-            painter.drawLine(self.path_points[-1], self.inf_point)
+            painter.drawLine(self.path_points[-2], self.path_points[-1])
         else:
             painter.setPen(pen)
             painter.drawLine(self.start_point, self.inf_point)
