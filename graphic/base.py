@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, 
     QGraphicsSceneMouseEvent, QGraphicsScene
 
 from graphic.config import FONT_SIZE
+from optics.util import round_and_float
 
 
 class ScalePoint(QGraphicsEllipseItem):
