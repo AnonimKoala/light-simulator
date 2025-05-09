@@ -31,13 +31,18 @@ class MirrorController(BasicController):
         self.material = Material(100, 10000)
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: RayController) -> Point2D | None:
+    def get_collision(self, ray: RayController) -> dict[str, Point2D | Segment2D] | None:
         intersections = []
         for side in self.sides.values():
             if intersection_point := ray.first_intersection(side):
-                intersections.append(intersection_point)
+                intersections.append({"point": intersection_point, "side": side})
         if intersections:
-            return Solver.nearest_to_origin(ray.start_point, intersections)
+            closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.start_point))
+            return {
+                "surface": closest_intersection["side"],
+                "point": closest_intersection["point"],
+                "normal": closest_intersection["side"].perpendicular_segment(closest_intersection["point"]),
+            }
         return None
 
     @property

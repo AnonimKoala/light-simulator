@@ -6,19 +6,19 @@ class Solver:
     optical_objects: list[BasicController] = []
     lasers = []
     @staticmethod
-    def find_first_collision(ray) -> Point2D|None:
+    def find_first_collision(ray) -> dict[str, Point2D | BasicController] | None:
         """
         Detects the collision of a ray with optical objects.
         :param ray: The ray to check for collisions
         :type ray: RayController
         """
-        collision_points = []
+        collisions = []
         for obj in Solver.optical_objects:
-            if collision_point := obj.get_collision(ray):
-                collision_points.append(collision_point)
+            if collision_data := obj.get_collision(ray):
+                collisions.append(collision_data)
 
-        if collision_points:
-            return Solver.nearest_to_origin(ray.start_point, collision_points)
+        if collisions:
+            return min(collisions, key=lambda cp: cp["point"].distance(ray.start_point))
         return None
 
     @staticmethod
