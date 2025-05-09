@@ -1,12 +1,12 @@
 from sympy import Point2D, cos, sin, pi, Ellipse, tan
 from sympy.abc import x, y
 
-from optics.BasicObject import BasicObject
+from optics.BasicController import BasicController
 from optics.RayController import RayController
 from optics.Solver import Solver
 
 
-class LenController(BasicObject):
+class LenController(BasicController):
     """
     The class allows creating lenses.
     """

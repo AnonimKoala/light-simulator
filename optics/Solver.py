@@ -1,9 +1,9 @@
 from sympy import Point2D
-from optics.BasicObject import BasicObject
+from optics.BasicController import BasicController
 
 
 class Solver:
-    optical_objects: list[BasicObject] = []
+    optical_objects: list[BasicController] = []
     lasers = []
     @staticmethod
     def find_first_collision(ray) -> Point2D|None:

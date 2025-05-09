@@ -1,13 +1,13 @@
 from PyQt6.QtCore import QPointF
 from sympy import Point2D, cos, sin, Segment2D
-from .BasicObject import BasicObject
+from .BasicController import BasicController
 from .Material import Material
 from .RayController import RayController
 from .Solver import Solver
 from .util import round_and_float, deg2rad
 
 
-class MirrorController(BasicObject):
+class MirrorController(BasicController):
     """
     The `Mirror` class allows the creation of mirrors.
     """

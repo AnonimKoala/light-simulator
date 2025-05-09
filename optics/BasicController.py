@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 from sympy import Point2D
 
 
-class BasicObject(ABC):
+class BasicController(ABC):
     """
-    BasicObject is a base class for all objects in the optics engine.
+    BasicController is a base class for all objects in the optics engine.
     It provides a common interface for all objects that interact with light.
     """
 
