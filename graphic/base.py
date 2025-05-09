@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, 
     QGraphicsSceneMouseEvent, QGraphicsScene
 
 from graphic.config import FONT_SIZE
-from tools import convert_qt_angle2cartesian
 
 
 class ScalePoint(QGraphicsEllipseItem):
@@ -179,9 +178,9 @@ class ZoomableView(QGraphicsView):
                 rotation_angle = 0
 
             self.selected_item.setRotation(rotation_angle)
-            self.selected_item.update_hint_text(convert_qt_angle2cartesian(rotation_angle))
+            self.selected_item.update_hint_text(rotation_angle)
             print(
-                f"Current Angle: {convert_qt_angle2cartesian(rotation_angle):.2f}\t"
+                f"Current Angle: {rotation_angle:.2f}\t"
                 f"Start: {self.start_rotation} Diff: {rotation_diff}°"
             )
         super().mouseMoveEvent(event)

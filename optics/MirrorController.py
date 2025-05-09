@@ -4,6 +4,7 @@ from .BasicObject import BasicObject
 from .Material import Material
 from .RayController import RayController
 from .Solver import Solver
+from .util import round_and_float, deg2rad
 
 
 class MirrorController(BasicObject):
@@ -59,15 +60,15 @@ class MirrorController(BasicObject):
 
     @property
     def vertices(self):
-        width2cos = (self.width / 2) * cos(self.rotation)
-        width2sin = (self.width / 2) * sin(self.rotation)
-        height2cos = (self.height / 2) * cos(self.rotation)
-        height2sin = (self.height / 2) * sin(self.rotation)
+        width2cos = (self.width / 2) * cos(deg2rad(self.rotation))
+        width2sin = (self.width / 2) * sin(deg2rad(self.rotation))
+        height2cos = (self.height / 2) * cos(deg2rad(self.rotation))
+        height2sin = (self.height / 2) * sin(deg2rad(self.rotation))
         return {
-            "top-left": Point2D(self.pos.x - width2cos - height2sin, self.pos.y - width2sin + height2cos),
-            "top-right": Point2D(self.pos.x + width2cos - height2sin, self.pos.y + width2sin + height2cos),
-            "bottom-right": Point2D(self.pos.x + width2cos + height2sin, self.pos.y + width2sin - height2cos),
-            "bottom-left": Point2D(self.pos.x - width2cos + height2sin, self.pos.y - width2sin - height2cos),
+            "top-left": Point2D(round_and_float(self.pos.x - width2cos - height2sin), round_and_float(self.pos.y - width2sin + height2cos)),
+            "top-right": Point2D(round_and_float(self.pos.x + width2cos - height2sin), round_and_float(self.pos.y + width2sin + height2cos)),
+            "bottom-right": Point2D(round_and_float(self.pos.x + width2cos + height2sin), round_and_float(self.pos.y + width2sin - height2cos)),
+            "bottom-left": Point2D(round_and_float(self.pos.x - width2cos + height2sin), round_and_float(self.pos.y - width2sin - height2cos)),
         }
 
     @property

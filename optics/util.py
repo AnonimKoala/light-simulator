@@ -5,6 +5,9 @@ Algorithm Description
     - For each edge of the polygon, compute the angle subtended at P(x,y).
     - Sum these angles; if the total is 2π, P lies inside; if 0, P lies outside.
 """
+from sympy import N, pi
+
+
 def is_point_inside_polygon(point, polygon):
     x, y = point
     wn = 0  # Winding number
@@ -19,3 +22,11 @@ def is_point_inside_polygon(point, polygon):
             if y2 <= y and (x2 - x1) * (y - y1) - (x - x1) * (y2 - y1) < 0:
                 wn -= 1
     return wn != 0
+
+
+def round_and_float(value):
+    return round(float(N(value)), 2)
+
+
+def deg2rad(deg):
+    return deg * (pi / 180.0)
