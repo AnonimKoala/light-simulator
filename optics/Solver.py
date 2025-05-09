@@ -6,7 +6,7 @@ class Solver:
     optical_objects: list[BasicController] = []
     lasers = []
     @staticmethod
-    def find_first_collision(ray) -> dict[str, Point2D | BasicController] | None:
+    def find_first_collision(ray) -> dict[str, Point2D | Segment2D] | None:
         """
         Detects the collision of a ray with optical objects.
         :param ray: The ray to check for collisions
