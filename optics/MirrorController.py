@@ -1,5 +1,5 @@
 from PyQt6.QtCore import QPointF
-from sympy import Point2D, cos, sin, Segment2D
+from sympy import Point2D, cos, sin, Segment2D, Ray
 from .BasicController import BasicController
 from .Material import Material
 from .RayController import RayController
@@ -31,13 +31,15 @@ class MirrorController(BasicController):
         self.material = Material(100, 10000)
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: RayController) -> dict[str, Point2D | Segment2D] | None:
+    def get_collision(self, ray: Ray) -> dict[str, Point2D | Segment2D] | None:
         intersections = []
         for side in self.sides.values():
-            if intersection_point := ray.first_intersection(side):
+            if intersection_point := Solver.first_intersection(ray,side):
                 intersections.append({"point": intersection_point, "side": side})
+
+        intersections = [cp for cp in intersections if cp["point"] != ray.source]
         if intersections:
-            closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.start_point))
+            closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
             return {
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],

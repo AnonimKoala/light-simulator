@@ -3,6 +3,7 @@ from PyQt6.QtCore import QPointF
 from graphic.base import ZoomableView
 from graphic.items import RayGraphicItem
 from optics.RayController import RayController
+from optics.Solver import Solver
 
 
 class Ray(RayGraphicItem):
@@ -20,12 +21,13 @@ class Ray(RayGraphicItem):
 
     def calc(self):
         refractions = self.controller.get_refractions()
+        refractions = Solver.get_refractions(self.controller.ray, [])
         if refractions is None:
             self.path_points = []
         else:
             self.path_points = [
                 self.start_point,
-                QPointF(refractions.x, refractions.y),
+                *refractions,
                 self.inf_point
             ]
         self.rerender()
