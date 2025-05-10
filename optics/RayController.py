@@ -18,18 +18,6 @@ class RayController:
         self.angle_deg = angle_deg
         self.ray = SympyRay(self.start_point, angle=self.angle_rad)
 
-    def get_refractions(self) -> Point2D | None:
-        ox = Line2D(Point2D(0, 0), Point2D(1, 0))
-        # new_angle =
-        if collision := Solver.find_first_collision(self):
-            surface_angle = ox.smallest_angle_between(collision["surface"])
-            beta = 2 * surface_angle - ox.smallest_angle_between(self.ray)
-            incidence_angle = 90 - beta
-            SympyRay(collision["point"],  angle=beta+surface_angle)
-            print("beta", rad2deg(beta).evalf())
-
-            return Solver.find_first_collision(self)["point"]
-        return None
 
     def first_intersection(self, obj) -> Point2D | None:
         if intersections := self.ray.intersection(obj):
