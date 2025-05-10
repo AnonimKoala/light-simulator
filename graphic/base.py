@@ -157,13 +157,13 @@ class ZoomableView(QGraphicsView):
             center_pos = self.selected_item.sceneBoundingRect().center()
 
             # Calculate instantaneous angle
-            angle = round_and_float(math.degrees(math.atan2(current_pos.y() - center_pos.y(),
-                                            current_pos.x() - center_pos.x())))
-            initial_angle = round_and_float(math.degrees(math.atan2(self.origin_pos.y() - center_pos.y(),
-                                                    self.origin_pos.x() - center_pos.x())))
+            angle = int(round(math.degrees(math.atan2(current_pos.y() - center_pos.y(),
+                                            current_pos.x() - center_pos.x()))))
+            initial_angle = int(round(math.degrees(math.atan2(self.origin_pos.y() - center_pos.y(),
+                                                    self.origin_pos.x() - center_pos.x()))))
 
             # Calculate rotation difference
-            rotation_diff = round_and_float(angle - initial_angle)
+            rotation_diff = int(angle - initial_angle)
 
             # Determine rotation direction
             if rotation_diff > 0:
@@ -181,7 +181,7 @@ class ZoomableView(QGraphicsView):
             self.selected_item.setRotation(rotation_angle)
             self.selected_item.update_hint_text(rotation_angle)
             print(
-                f"Current Angle: {rotation_angle:.2f}\t"
+                f"Current Angle: {rotation_angle}\t"
                 f"Start: {self.start_rotation} Diff: {rotation_diff}°"
             )
         super().mouseMoveEvent(event)

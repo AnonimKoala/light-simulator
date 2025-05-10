@@ -5,7 +5,7 @@ Algorithm Description
     - For each edge of the polygon, compute the angle subtended at P(x,y).
     - Sum these angles; if the total is 2π, P lies inside; if 0, P lies outside.
 """
-from sympy import N, pi
+from sympy import N, pi, Point2D
 
 
 def is_point_inside_polygon(point, polygon):
@@ -25,7 +25,7 @@ def is_point_inside_polygon(point, polygon):
 
 
 def round_and_float(value):
-    return round(float(N(value)), 2)
+    return round(float(value), 2)
 
 
 def deg2rad(deg):
@@ -33,3 +33,6 @@ def deg2rad(deg):
 
 def rad2deg(rad):
     return rad * (180.0 / pi)
+
+def round_point(point: Point2D):
+    return Point2D(round_and_float(point.x), round_and_float(point.y))

@@ -4,7 +4,7 @@ from .BasicController import BasicController
 from .Material import Material
 from .RayController import RayController
 from .Solver import Solver
-from .util import round_and_float, deg2rad
+from .util import round_and_float, deg2rad, round_point
 
 
 class MirrorController(BasicController):
@@ -36,8 +36,7 @@ class MirrorController(BasicController):
         for side in self.sides.values():
             if intersection_point := Solver.first_intersection(ray,side):
                 intersections.append({"point": intersection_point, "side": side})
-
-        intersections = [cp for cp in intersections if cp["point"] != ray.source]
+        intersections = [cp for cp in intersections if cp["point"] != round_point(ray.source)]
         if intersections:
             closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
             return {

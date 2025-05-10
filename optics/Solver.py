@@ -1,5 +1,6 @@
 from sympy import Point2D, Segment2D, Line2D, Ray
 from optics.BasicController import BasicController
+from optics.util import round_point
 
 
 class Solver:
@@ -17,9 +18,10 @@ class Solver:
         for obj in Solver.optical_objects:
             if collision_data := obj.get_collision(ray):
                 collisions.append(collision_data)
-
         if collisions:
-            return min(collisions, key=lambda cp: cp["point"].distance(ray.source))
+            nearest = min(collisions, key=lambda cp: cp["point"].distance(round_point(ray.source)))
+            nearest["point"] = round_point(nearest["point"])
+            return nearest
         return None
 
     @staticmethod
