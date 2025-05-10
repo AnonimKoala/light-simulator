@@ -20,8 +20,8 @@ class Ray(RayGraphicItem):
         self.calc()
 
     def calc(self):
-        refractions = self.controller.get_refractions()
         refractions = Solver.get_refractions(self.controller.ray, [])
+        refractions = [QPointF(obj.x, obj.y) for obj in refractions]
         if refractions is None:
             self.path_points = []
         else:

@@ -38,19 +38,23 @@ class Solver:
 
     @staticmethod
     def get_refractions(ray: Ray, collisions: list[Point2D]) -> list[Point2D] | None:
-        print("start get_refractions")
-        if collision := Solver.find_first_collision(ray):
-            collisions.append(collision["point"])
-            surface_angle = Solver.OX.smallest_angle_between(collision["surface"])
-            beta = 2 * surface_angle - Solver.OX.smallest_angle_between(ray)
-            print("Collision point: ",collision["point"])
-            print("Source: ",ray.source)
-            return Solver.get_refractions(Ray(collision["point"],  angle=beta+surface_angle), collisions)
-        # collisions.append(Point2D(inf,inf))
-        return collision
+        collisions = []
+        def func(ray1: Ray):
+            if collision := Solver.find_first_collision(ray1):
+                surface_angle_to_ox = Solver.OX.smallest_angle_between(collision["surface"])
+                beta = 2 * surface_angle_to_ox - Solver.OX.smallest_angle_between(ray1)
+                new_ray = Ray(collision["point"],  angle=beta+surface_angle_to_ox)
+                return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
+            return None
+        while ray := func(ray):
+            collisions.append(round_point(ray.source))
+        return collisions
 
     @staticmethod
     def first_intersection(ray: Ray, obj) -> Point2D | None:
         if intersections := ray.intersection(obj):
-            return Solver.nearest_to_origin(ray.source, intersections)
+            nearest = Solver.nearest_to_origin(round_point(ray.source), intersections)
+            if isinstance(nearest, Segment2D):
+                return round_point(Solver.nearest_to_origin(round_point(ray.source), [nearest.p1, nearest.p2]))
+            return round_point(nearest)
         return None
