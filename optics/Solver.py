@@ -1,6 +1,8 @@
-from sympy import Point2D, Segment2D, Line2D, Ray
+from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin
+
+from conf import RAY_MAX_LENGTH
 from optics.BasicController import BasicController
-from optics.util import round_point, round_and_float, rad2deg
+from optics.util import round_point, round_and_float, rad2deg, round_ray, angle_to_ox
 
 
 class Solver:
@@ -39,17 +41,22 @@ class Solver:
         return min(objs, key=lambda obj: obj.distance(origin))
 
     @staticmethod
-    def get_refractions(ray: Ray, collisions: list[Point2D]) -> list[Point2D] | None:
+    def get_refractions(ray: Ray) -> list[Point2D] | None:
         collisions = []
         def func(ray1: Ray):
             if collision := Solver.find_first_collision(ray1):
-                normal_angle_to_ox = Solver.OX.smallest_angle_between(collision["normal"])
-                new_ray_angle_to_ox = 2 * normal_angle_to_ox - Solver.OX.smallest_angle_between(ray1)
-                new_ray = Ray(collision["point"],  angle=new_ray_angle_to_ox)
+                print(f"Collision {collision}")
+                normal_angle_to_ox = angle_to_ox(collision['normal'])
+                new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(ray1) + pi
+                new_ray = round_ray(Ray2D(collision["point"],  angle=new_ray_angle_to_ox))
                 return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
-            return None
+            return Solver.get_ray_inf(ray1)
+        ii = 0
         while ray := func(ray):
             collisions.append(round_point(ray.source))
+            ii += 1
+            if ii == 2:
+                break
         return collisions
 
     @staticmethod
@@ -60,3 +67,11 @@ class Solver:
                 return round_point(Solver.nearest_to_origin(round_point(ray.source), [nearest.p1, nearest.p2]))
             return round_point(nearest)
         return None
+
+    @staticmethod
+    def get_ray_inf(ray: Ray)-> Ray:
+        ray_angle = angle_to_ox(ray)
+        end_x = ray.source.x + RAY_MAX_LENGTH * cos(ray_angle)
+        end_y = ray.source.y + RAY_MAX_LENGTH * sin(ray_angle)
+        return Ray(Point2D(end_x, end_y), angle=ray_angle)
+
