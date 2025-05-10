@@ -125,6 +125,10 @@ class ZoomableView(QGraphicsView):
 
             print("Rotation mode:", "ON" if self.rotation_mode else "OFF")
 
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        print(self.mapToScene(event.pos()))
+        super().mouseDoubleClickEvent(event)
+
     def mousePressEvent(self, event: QMouseEvent):
         """
         Handle mouse press events for initiating rotation.
