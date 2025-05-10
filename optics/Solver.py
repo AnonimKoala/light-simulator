@@ -19,6 +19,8 @@ class Solver:
             if collision_data := obj.get_collision(ray):
                 collisions.append(collision_data)
         if collisions:
+            # Filter out collisions that are the same as the ray source
+            collisions = [cp for cp in collisions if round_point(cp["point"]) != round_point(ray.source)]
             nearest = min(collisions, key=lambda cp: cp["point"].distance(round_point(ray.source)))
             nearest["point"] = round_point(nearest["point"])
             return nearest
