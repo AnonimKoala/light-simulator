@@ -42,7 +42,7 @@ class MirrorController(BasicController):
             return {
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
-                "normal": closest_intersection["side"].perpendicular_segment(closest_intersection["point"]),
+                "normal": closest_intersection["side"].perpendicular_line(closest_intersection["point"]),
             }
         return None
 
