@@ -1,9 +1,10 @@
 from PyQt6.QtWidgets import QApplication, QGraphicsScene
 import sys
 
-from graphic.base import ZoomableView, SceneItem
+from graphic.base import ZoomableView
 from graphic.config import SCENE_SIZE
-from graphic.items import EllipseItem, RectangleItem
+from render.Laser import Laser
+from render.Mirror import Mirror
 
 
 def main():
@@ -18,13 +19,11 @@ def main():
     view.scale(1, -1)
     view.setWindowTitle("Light Simulator")
 
-    ellipse1 = EllipseItem(-100, -50, 200, 100, view)
-    ellipse2 = EllipseItem(200, 200, 150, 75, view)
-    scene.addItem(ellipse1)
-    scene.addItem(ellipse2)
+    mirror = Mirror(-100, -50, 20, 200, view)
+    scene.addItem(mirror)
 
-    rectangle = RectangleItem(50, 50, 150, 100, view)
-    scene.addItem(rectangle)
+    laser = Laser(50, 50, 50, view)
+    scene.addItem(laser)
 
     view.resize(800, 600)
     view.show()
