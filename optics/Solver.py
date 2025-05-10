@@ -1,6 +1,6 @@
 from sympy import Point2D, Segment2D, Line2D, Ray
 from optics.BasicController import BasicController
-from optics.util import round_point
+from optics.util import round_point, round_and_float, rad2deg
 
 
 class Solver:
@@ -41,9 +41,9 @@ class Solver:
         collisions = []
         def func(ray1: Ray):
             if collision := Solver.find_first_collision(ray1):
-                surface_angle_to_ox = Solver.OX.smallest_angle_between(collision["surface"])
-                beta = 2 * surface_angle_to_ox - Solver.OX.smallest_angle_between(ray1)
-                new_ray = Ray(collision["point"],  angle=beta+surface_angle_to_ox)
+                normal_angle_to_ox = Solver.OX.smallest_angle_between(collision["normal"])
+                new_ray_angle_to_ox = 2 * normal_angle_to_ox - Solver.OX.smallest_angle_between(ray1)
+                new_ray = Ray(collision["point"],  angle=new_ray_angle_to_ox)
                 return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
             return None
         while ray := func(ray):
