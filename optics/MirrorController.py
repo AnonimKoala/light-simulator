@@ -1,13 +1,12 @@
 from PyQt6.QtCore import QPointF
-from sympy import Point2D, cos, sin, Segment2D
-from .BasicObject import BasicObject
+from sympy import Point2D, cos, sin, Segment2D, Ray
+from .BasicController import BasicController
 from .Material import Material
-from .RayController import RayController
 from .Solver import Solver
-from .util import round_and_float, deg2rad
+from .util import deg2rad, round_point, round_segment, round_line
 
 
-class MirrorController(BasicObject):
+class MirrorController(BasicController):
     """
     The `Mirror` class allows the creation of mirrors.
     """
@@ -31,13 +30,19 @@ class MirrorController(BasicObject):
         self.material = Material(100, 10000)
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: RayController) -> Point2D | None:
+    def get_collision(self, ray: Ray) -> dict[str, Point2D | Segment2D] | None:
         intersections = []
         for side in self.sides.values():
-            if intersection_point := ray.first_intersection(side):
-                intersections.append(intersection_point)
+            if intersection_point := Solver.first_intersection(ray,side):
+                intersections.append({"point": round_point(intersection_point), "side": side})
+        intersections = [cp for cp in intersections if cp["point"] != round_point(ray.source)]
         if intersections:
-            return Solver.nearest_to_origin(ray.start_point, intersections)
+            closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
+            return {
+                "surface": closest_intersection["side"],
+                "point": closest_intersection["point"],
+                "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
+            }
         return None
 
     @property
@@ -65,18 +70,18 @@ class MirrorController(BasicObject):
         height2cos = (self.height / 2) * cos(deg2rad(self.rotation))
         height2sin = (self.height / 2) * sin(deg2rad(self.rotation))
         return {
-            "top-left": Point2D(round_and_float(self.pos.x - width2cos - height2sin), round_and_float(self.pos.y - width2sin + height2cos)),
-            "top-right": Point2D(round_and_float(self.pos.x + width2cos - height2sin), round_and_float(self.pos.y + width2sin + height2cos)),
-            "bottom-right": Point2D(round_and_float(self.pos.x + width2cos + height2sin), round_and_float(self.pos.y + width2sin - height2cos)),
-            "bottom-left": Point2D(round_and_float(self.pos.x - width2cos + height2sin), round_and_float(self.pos.y - width2sin - height2cos)),
+            "top-left": round_point(Point2D(self.pos.x - width2cos - height2sin, self.pos.y - width2sin + height2cos)),
+            "top-right": round_point(Point2D(self.pos.x + width2cos - height2sin, self.pos.y + width2sin + height2cos)),
+            "bottom-right": round_point(Point2D(self.pos.x + width2cos + height2sin, self.pos.y + width2sin - height2cos)),
+            "bottom-left": round_point(Point2D(self.pos.x - width2cos + height2sin, self.pos.y - width2sin - height2cos)),
         }
 
     @property
     def sides(self):
         vertices = self.vertices
         return {
-            "left": Segment2D(vertices["top-left"], vertices["bottom-left"]),
-            "right": Segment2D(vertices["top-right"], vertices["bottom-right"]),
-            "top": Segment2D(vertices["top-left"], vertices["top-right"]),
-            "bottom": Segment2D(vertices["bottom-left"], vertices["bottom-right"]),
+            "left": round_segment(Segment2D(vertices["top-left"], vertices["bottom-left"])),
+            "right": round_segment(Segment2D(vertices["top-right"], vertices["bottom-right"])),
+            "top": round_segment(Segment2D(vertices["top-left"], vertices["top-right"])),
+            "bottom": round_segment(Segment2D(vertices["bottom-left"], vertices["bottom-right"])),
         }

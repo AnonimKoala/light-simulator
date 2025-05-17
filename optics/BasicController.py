@@ -1,16 +1,16 @@
 from abc import ABC, abstractmethod
 
-from sympy import Point2D
+from sympy import Point2D, Segment2D, Ray2D
 
 
-class BasicObject(ABC):
+class BasicController(ABC):
     """
-    BasicObject is a base class for all objects in the optics engine.
+    BasicController is a base class for all objects in the optics engine.
     It provides a common interface for all objects that interact with light.
     """
 
     @abstractmethod
-    def get_collision(self, ray) -> Point2D | None:
+    def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
         """
         Detects the collision of a ray with the object.
         :param ray: The ray to check for collisions with

@@ -1,10 +1,10 @@
 from PyQt6.QtCore import QPointF
 
-from optics.BasicObject import BasicObject
+from optics.BasicController import BasicController
 from optics.Solver import Solver
 
 
-class PrizmController(BasicObject):
+class PrizmController(BasicController):
     def __init__(self, x: float, y: float, vertices: list[QPointF]):
         Solver.optical_objects.append(self)
 

@@ -18,15 +18,14 @@ class RayController:
         self.angle_deg = angle_deg
         self.ray = SympyRay(self.start_point, angle=self.angle_rad)
 
-    def get_refractions(self) -> QPointF | None:
-        return Solver.find_first_collision(self)
 
-    def first_intersection(self, obj):
+    def first_intersection(self, obj) -> Point2D | None:
         if intersections := self.ray.intersection(obj):
             return Solver.nearest_to_origin(self.start_point, intersections)
         return None
 
     def intersections(self, obj):
+        """ Finds all intersections of the ray with the given object. """
         if intersections := self.ray.intersection(obj):
             return intersections
         return None
