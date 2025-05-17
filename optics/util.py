@@ -25,7 +25,7 @@ def is_point_inside_polygon(point, polygon):
 
 
 def round_and_float(value):
-    return round(float(value), 2)
+    return round(float(value), 4)
 
 
 def deg2rad(deg):
@@ -39,6 +39,12 @@ def round_point(point: Point2D):
 
 def round_ray(ray: SympyRay):
     return SympyRay(round_point(ray.source), round_point(ray.p2))
+
+def round_segment(segment: Segment2D):
+    return Segment2D(round_point(segment.p1), round_point(segment.p2))
+
+def round_line(line: Line2D):
+    return Line2D(round_point(line.p1), round_point(line.p2))
 
 def angle_to_ox(obj: Line2D | Segment2D | SympyRay):
     dx = obj.p2.x - obj.p1.x

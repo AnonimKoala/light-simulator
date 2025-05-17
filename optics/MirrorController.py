@@ -4,7 +4,7 @@ from .BasicController import BasicController
 from .Material import Material
 from .RayController import RayController
 from .Solver import Solver
-from .util import round_and_float, deg2rad, round_point
+from .util import round_and_float, deg2rad, round_point, round_segment, round_line
 
 
 class MirrorController(BasicController):
@@ -35,14 +35,14 @@ class MirrorController(BasicController):
         intersections = []
         for side in self.sides.values():
             if intersection_point := Solver.first_intersection(ray,side):
-                intersections.append({"point": intersection_point, "side": side})
+                intersections.append({"point": round_point(intersection_point), "side": side})
         intersections = [cp for cp in intersections if cp["point"] != round_point(ray.source)]
         if intersections:
             closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
             return {
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
-                "normal": closest_intersection["side"].perpendicular_line(closest_intersection["point"]),
+                "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
             }
         return None
 
@@ -71,18 +71,18 @@ class MirrorController(BasicController):
         height2cos = (self.height / 2) * cos(deg2rad(self.rotation))
         height2sin = (self.height / 2) * sin(deg2rad(self.rotation))
         return {
-            "top-left": Point2D(round_and_float(self.pos.x - width2cos - height2sin), round_and_float(self.pos.y - width2sin + height2cos)),
-            "top-right": Point2D(round_and_float(self.pos.x + width2cos - height2sin), round_and_float(self.pos.y + width2sin + height2cos)),
-            "bottom-right": Point2D(round_and_float(self.pos.x + width2cos + height2sin), round_and_float(self.pos.y + width2sin - height2cos)),
-            "bottom-left": Point2D(round_and_float(self.pos.x - width2cos + height2sin), round_and_float(self.pos.y - width2sin - height2cos)),
+            "top-left": round_point(Point2D(self.pos.x - width2cos - height2sin, self.pos.y - width2sin + height2cos)),
+            "top-right": round_point(Point2D(self.pos.x + width2cos - height2sin, self.pos.y + width2sin + height2cos)),
+            "bottom-right": round_point(Point2D(self.pos.x + width2cos + height2sin, self.pos.y + width2sin - height2cos)),
+            "bottom-left": round_point(Point2D(self.pos.x - width2cos + height2sin, self.pos.y - width2sin - height2cos)),
         }
 
     @property
     def sides(self):
         vertices = self.vertices
         return {
-            "left": Segment2D(vertices["top-left"], vertices["bottom-left"]),
-            "right": Segment2D(vertices["top-right"], vertices["bottom-right"]),
-            "top": Segment2D(vertices["top-left"], vertices["top-right"]),
-            "bottom": Segment2D(vertices["bottom-left"], vertices["bottom-right"]),
+            "left": round_segment(Segment2D(vertices["top-left"], vertices["bottom-left"])),
+            "right": round_segment(Segment2D(vertices["top-right"], vertices["bottom-right"])),
+            "top": round_segment(Segment2D(vertices["top-left"], vertices["top-right"])),
+            "bottom": round_segment(Segment2D(vertices["bottom-left"], vertices["bottom-right"])),
         }

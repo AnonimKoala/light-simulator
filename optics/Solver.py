@@ -49,7 +49,7 @@ class Solver:
                 normal_angle_to_ox = angle_to_ox(collision['normal'])
                 new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(ray1) + pi
                 new_ray = round_ray(Ray2D(collision["point"],  angle=new_ray_angle_to_ox))
-                return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
+                return round_ray(new_ray)
             return Solver.get_ray_inf_point(ray1)
         i = 0
         while True:
@@ -82,5 +82,5 @@ class Solver:
         ray_angle = angle_to_ox(ray)
         end_x = ray.source.x + RAY_MAX_LENGTH * cos(ray_angle)
         end_y = ray.source.y + RAY_MAX_LENGTH * sin(ray_angle)
-        return Point2D(end_x, end_y)
+        return round_point(Point2D(end_x, end_y))
 
