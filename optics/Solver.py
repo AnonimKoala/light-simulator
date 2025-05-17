@@ -1,6 +1,6 @@
 from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin
 
-from conf import RAY_MAX_LENGTH
+from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS
 from optics.BasicController import BasicController
 from optics.util import round_point, round_and_float, rad2deg, round_ray, angle_to_ox
 
@@ -51,13 +51,18 @@ class Solver:
                 new_ray = round_ray(Ray2D(collision["point"],  angle=new_ray_angle_to_ox))
                 return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
             return Solver.get_ray_inf_point(ray1)
-        ii = 0
+        i = 0
         while True:
+            i += 1
             out = func(ray)
             print(out)
             if isinstance(out, Ray):
                 ray = out
                 collisions.append(round_point(out.source))
+                print("i ", i)
+                if i > MAX_REFRACTIONS:
+                    collisions.append(round_point(Solver.get_ray_inf_point(ray)))
+                    break
             if isinstance(out, Point2D):
                 collisions.append(round_point(out))
                 break
