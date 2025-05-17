@@ -7,6 +7,8 @@ Algorithm Description
 """
 from sympy import N, pi, Point2D, Ray as SympyRay, Line2D, Segment2D, atan2
 
+from conf import ROUNDING_PRECISION
+
 
 def is_point_inside_polygon(point, polygon):
     x, y = point
@@ -25,7 +27,7 @@ def is_point_inside_polygon(point, polygon):
 
 
 def round_and_float(value):
-    return round(float(value), 4)
+    return round(float(value), ROUNDING_PRECISION)
 
 
 def deg2rad(deg):
