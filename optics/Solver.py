@@ -50,12 +50,16 @@ class Solver:
                 new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(ray1) + pi
                 new_ray = round_ray(Ray2D(collision["point"],  angle=new_ray_angle_to_ox))
                 return Ray(round_point(new_ray.source),  round_point(new_ray.p2))
-            return Solver.get_ray_inf(ray1)
+            return Solver.get_ray_inf_point(ray1)
         ii = 0
-        while ray := func(ray):
-            collisions.append(round_point(ray.source))
-            ii += 1
-            if ii == 2:
+        while True:
+            out = func(ray)
+            print(out)
+            if isinstance(out, Ray):
+                ray = out
+                collisions.append(round_point(out.source))
+            if isinstance(out, Point2D):
+                collisions.append(round_point(out))
                 break
         return collisions
 
@@ -69,9 +73,9 @@ class Solver:
         return None
 
     @staticmethod
-    def get_ray_inf(ray: Ray)-> Ray:
+    def get_ray_inf_point(ray: Ray)-> Point2D:
         ray_angle = angle_to_ox(ray)
         end_x = ray.source.x + RAY_MAX_LENGTH * cos(ray_angle)
         end_y = ray.source.y + RAY_MAX_LENGTH * sin(ray_angle)
-        return Ray(Point2D(end_x, end_y), angle=ray_angle)
+        return Point2D(end_x, end_y)
 
