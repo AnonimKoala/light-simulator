@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, 
     QGraphicsSceneMouseEvent, QGraphicsScene
 
 from graphic.config import FONT_SIZE
-from optics.util import round_and_float
 
 
 class ScalePoint(QGraphicsEllipseItem):
@@ -184,10 +183,6 @@ class ZoomableView(QGraphicsView):
 
             self.selected_item.setRotation(rotation_angle)
             self.selected_item.update_hint_text(rotation_angle)
-            print(
-                f"Current Angle: {rotation_angle}\t"
-                f"Start: {self.start_rotation} Diff: {rotation_diff}°"
-            )
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent):

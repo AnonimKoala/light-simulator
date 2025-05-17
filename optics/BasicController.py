@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from sympy import Point2D
+from sympy import Point2D, Segment2D, Ray2D
 
 
 class BasicController(ABC):
@@ -10,7 +10,7 @@ class BasicController(ABC):
     """
 
     @abstractmethod
-    def get_collision(self, ray) -> Point2D | None:
+    def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
         """
         Detects the collision of a ray with the object.
         :param ray: The ray to check for collisions with
