@@ -229,6 +229,7 @@ class RayGraphicItem(QGraphicsItem):
             painter.drawLine(self.start_point, self.inf_point)
 
     def rerender(self):
+        self.scene().update()
         self.prepareGeometryChange()
         self.update()
 
