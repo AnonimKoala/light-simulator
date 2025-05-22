@@ -67,7 +67,9 @@ class LenGraphicItem(SceneItem):
     def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView, left_radius: float,
                  right_radius: float):
         SceneItem.__init__(self, x, y, width, height, view)
+        view.scene().addItem(self)
         self.setPos(x, y)
+        self.itemChange(QGraphicsItem.GraphicsItemChange.ItemPositionChange, QPointF(x,y))
         self._brush = QBrush(QColor(0, 128, 128))
         self.left_radius = left_radius
         self.right_radius = right_radius
@@ -131,6 +133,16 @@ class LenGraphicItem(SceneItem):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.brush())
         painter.drawPath(path)
+        # Draw a small dot at the lens position (center)
+        center_x = int(self.width / 2)
+        center_y = int(self.height / 2)
+        dot_radius = 3
+        painter.setPen(QPen(QColor("blue"), 1))
+        painter.setBrush(QBrush(QColor("blue")))
+        painter.drawEllipse(center_x - dot_radius, center_y - dot_radius, dot_radius * 2, dot_radius * 2)
+        # painter.drawRect(self.boundingRect())
+
+
 
     def brush(self):
         return getattr(self, "_brush", QBrush(QColor(0, 128, 128)))

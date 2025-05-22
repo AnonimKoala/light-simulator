@@ -14,7 +14,7 @@ class LenController(BasicController):
     DEFAULT_RADIUS = 20
     DEFAULT_HEIGHT = 100
 
-    def __init__(self, pos_x, pos_y, left_radius=DEFAULT_RADIUS, right_radius=DEFAULT_RADIUS):
+    def __init__(self, pos_x, pos_y, d, height=DEFAULT_HEIGHT, left_radius=DEFAULT_RADIUS, right_radius=DEFAULT_RADIUS):
         """
         Initializes an instance of the `Len` class.
 

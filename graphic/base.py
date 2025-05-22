@@ -490,4 +490,4 @@ class SceneItem(QGraphicsItem):
 
     def center_pos(self):
         """Get the center position of the item."""
-        return self.mapToScene(self.boundingRect().center())
+        return self.mapToScene(QPointF(self.width / 2, self.height / 2))
