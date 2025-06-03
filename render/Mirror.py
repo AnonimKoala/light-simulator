@@ -23,8 +23,8 @@ class Mirror(RectangleItem):
             self.controller.rotation = self.rotation()
             if not self._timer_active:
                 self._timer_active = True
-                QTimer.singleShot(REFRESH_OBJ_TIMEOUT, lambda: ([self.controller.update_props()],
+                QTimer.singleShot(REFRESH_OBJ_TIMEOUT, lambda: ([self.controller.update_props(), Laser.recalc_all()],
                                                             setattr(self, '_timer_active', False)))
 
-            Laser.recalc_all()
+
         return super().itemChange(change, value)
