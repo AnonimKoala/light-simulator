@@ -1,4 +1,5 @@
-from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin
+from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin, solve, Ellipse, symbols
+from sympy.geometry.entity import GeometrySet
 
 from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS
 from optics.BasicController import BasicController
@@ -42,6 +43,18 @@ class Solver:
         return min(objs, key=lambda obj: obj.distance(origin))
 
     @staticmethod
+    def sort_by_distance(origin, objs):
+        """
+        Sorts objects by their distance to the origin.
+        :param origin: The origin point
+        :type origin: Point2D
+        :param objs: List of objects to check
+        :type objs: list[Point2D]
+        :return: List of objects sorted by distance to the origin
+        """
+        return sorted(objs, key=lambda obj: obj.distance(origin))
+
+    @staticmethod
     def get_refractions(ray: Ray2D) -> list[Point2D] | None:
         collisions = []
 
@@ -76,6 +89,23 @@ class Solver:
                 return round_point(Solver.nearest_to_origin(round_point(ray.source), [nearest.p1, nearest.p2]))
             return round_point(nearest)
         return None
+
+    @staticmethod
+    def all_intersections(ray: Ray, obj) -> list[Point2D]:
+        print(type(obj))
+        if not isinstance(obj, GeometrySet):
+            ray_line = Line2D(*ray.points)
+            solutions = solve([ray_line.equation(), obj], dict=True)
+            if not solutions:
+                return []
+            x, y = symbols('x y')
+            print([Point2D(sol[x], sol[y]) for sol in solutions]) # fixme
+            return [Point2D(sol[x], sol[y]) for sol in solutions]
+        if intersections := ray.intersection(obj):
+            if any(not isinstance(i, Point2D) for i in intersections):
+                raise NotImplementedError("all_intersections process only Point2D")
+            return [round_point(i) for i in intersections]
+        return []
 
     @staticmethod
     def get_ray_inf_point(ray: Ray2D) -> Point2D:
