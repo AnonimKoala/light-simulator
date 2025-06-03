@@ -161,9 +161,9 @@ class ZoomableView(QGraphicsView):
 
             # Calculate instantaneous angle
             angle = int(round(math.degrees(math.atan2(current_pos.y() - center_pos.y(),
-                                            current_pos.x() - center_pos.x()))))
+                                                      current_pos.x() - center_pos.x()))))
             initial_angle = int(round(math.degrees(math.atan2(self.origin_pos.y() - center_pos.y(),
-                                                    self.origin_pos.x() - center_pos.x()))))
+                                                              self.origin_pos.x() - center_pos.x()))))
 
             # Calculate rotation difference
             rotation_diff = int(angle - initial_angle)
