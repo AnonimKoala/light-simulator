@@ -1,9 +1,11 @@
-from sympy import Point2D, cos, sin, pi, Ellipse, tan
+from sympy import Point2D, cos, sin, pi, Ellipse, tan, Ray2D, Segment2D, Circle
 from sympy.abc import x, y
 
+from conf import LEN_NORMAL_POINTS_DISTANCE
 from optics.BasicController import BasicController
 from optics.RayController import RayController
 from optics.Solver import Solver
+from optics.util import round_point, round_line, round_ray, round_segment, deg2rad
 
 
 class LenController(BasicController):
@@ -25,65 +27,119 @@ class LenController(BasicController):
         :type pos_y: float
         """
 
-        self._pos = Point2D(pos_x, pos_y)
-        self._height = LenController.DEFAULT_HEIGHT
-        self._rotation = pi / 2  # Rotation in radians about the OX axis
-        self._d = abs(left_radius) + abs(right_radius)  # The thickness of the len
-        self._left_radius = left_radius
-        self._right_radius = right_radius
-
-        self._left_curve_eq = None
-        self._right_curve_eq = None
-        self._vertices = {}  # Stores boundary points of the lens
-        self._curve_vertices = {}  # Stores middle top/bottom points of curves
+        self.pos = Point2D(pos_x, pos_y)
+        self.height = height
+        self.rotation = 0  # Rotation in radians about the OX axis
+        self.left_radius = left_radius
+        self.right_radius = right_radius
+        self.d = d  # The thickness of the len
 
         self.calc()
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: RayController) -> Point2D:
-        pass
+    def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
+        intersections = []
+        has_collision = False
+        for key,side in self.sides.items():
+            if Solver.first_intersection(ray, side):
+                has_collision = True
+        if not has_collision:
+            return None
+
+        def check_curve(ray_obj: Ray2D, curve: Ellipse, radius: float):
+            if not (curve_intersections := Solver.all_intersections(ray_obj, curve)): #fixme
+                return None
+            curve_intersections = Solver.sort_by_distance(ray_obj.source, curve_intersections)
+            if radius >= 0:
+                return {
+                    "point": curve_intersections[0],
+                    "side": Segment2D(
+                        *curve.intersection(
+                            Circle(curve_intersections[0], LEN_NORMAL_POINTS_DISTANCE)))
+                }
+            elif radius < 0:
+                return {
+                    "point": curve_intersections[-1],
+                    "side": Segment2D(
+                        *curve.intersection(
+                            Circle(curve_intersections[-1], LEN_NORMAL_POINTS_DISTANCE)))
+                }
+            return None
+
+        intersections.append(check_curve(ray, self.left_curve, self.left_radius))
+        intersections.append(check_curve(ray, self.right_curve, self.right_radius))
+        # todo
+        intersections = list(filter(lambda cp: cp["point"] != round_point(ray.source), intersections))
+        if intersections:
+            closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
+            return {
+                "surface": closest_intersection["side"],
+                "point": closest_intersection["point"],
+                "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
+            }
+        return None
 
     def calc(self):
         """
         Calculates and updates the len.
         """
 
-        d2sin = (self.d / 2) * sin(self.rotation)
-        d2cos = (self.d / 2) * cos(self.rotation)
-        h2sin = (self.height / 2) * sin(self.rotation)
-        h2cos = (self.height / 2) * cos(self.rotation)
+        # todo check if the equation is correct, the rotation is correct
+        # todo Update the equations of the sides
 
-        self._vertices: dict[str, Point2D] = {  # Stores the vertices of the len
-            "top-left": Point2D(self.pos.x - d2cos - h2sin, self.pos.y - d2sin + h2cos),
-            "top-right": Point2D(self.pos.x + d2cos - h2sin, self.pos.y + d2sin + h2cos),
-            "bottom-left": Point2D(self.pos.x - d2cos + h2sin, self.pos.y - d2sin - h2cos),
-            "bottom-right": Point2D(self.pos.x + d2cos + h2sin, self.pos.y + d2sin - h2cos),
+    @property
+    def vertices(self) -> dict:
+        d2cos = (self.d / 2) * cos(deg2rad(self.rotation))
+        d2sin = (self.d / 2) * sin(deg2rad(self.rotation))
+        height2cos = (self.height / 2) * cos(deg2rad(self.rotation))
+        height2sin = (self.height / 2) * sin(deg2rad(self.rotation))
+
+        return {
+            "top-left": round_point(Point2D(self.pos.x - d2cos - height2sin, self.pos.y - d2sin + height2cos)),
+            "top-right": round_point(Point2D(self.pos.x + d2cos - height2sin, self.pos.y + d2sin + height2cos)),
+            "bottom-right": round_point(Point2D(self.pos.x + d2cos + height2sin, self.pos.y + d2sin - height2cos)),
+            "bottom-left": round_point(Point2D(self.pos.x - d2cos + height2sin, self.pos.y - d2sin - height2cos)),
         }
 
+    @property
+    def sides(self) -> dict:
+        return {
+            "top": Segment2D(self.vertices["top-left"], self.vertices["top-right"]),
+            "bottom": Segment2D(self.vertices["bottom-left"], self.vertices["bottom-right"]),
+            "left": Segment2D(self.vertices["top-left"], self.vertices["bottom-left"]),
+            "right": Segment2D(self.vertices["top-right"], self.vertices["bottom-right"]),
+        }
+
+    @property
+    def curve_vertices(self) -> dict:
+        h2sin = (self.height / 2) * sin(self.rotation)
+        h2cos = (self.height / 2) * cos(self.rotation)
         rest_d2 = (self.d - self.left_radius - self.right_radius) / 2
         d2rest_cos = (self.d / 2 + rest_d2) * cos(self.rotation)
         d2rest_sin = (self.d / 2 + rest_d2) * sin(self.rotation)
 
-        self._curve_vertices: dict[str, Point2D] = {  # Stores middle top/bottom points of curves
+        return {  # Stores middle top/bottom points of curves
             "left-top": Point2D(self.pos.x - d2rest_cos - h2sin, self.pos.y - d2rest_sin + h2cos),
             "left-bottom": Point2D(self.pos.x - d2rest_cos + h2sin, self.pos.y - d2rest_sin - h2cos),
             "right-top": Point2D(self.pos.x + d2rest_cos - h2sin, self.pos.y + d2rest_sin + h2cos),
             "right-bottom": Point2D(self.pos.x + d2rest_cos + h2sin, self.pos.y + d2rest_sin - h2cos),
         }
 
-        self._left_curve_eq = Ellipse(
-            self._curve_vertices["left-top"].midpoint(self._curve_vertices["left-bottom"]),
-            self._left_radius,
-            self._curve_vertices["left-top"].distance(self._curve_vertices["left-bottom"])
+    @property
+    def left_curve(self):
+        return Ellipse(
+            self.curve_vertices["left-top"].midpoint(self.curve_vertices["left-bottom"]),
+            self.left_radius,
+            self.curve_vertices["left-top"].distance(self.curve_vertices["left-bottom"])
         ).equation(x, y, _slope=tan(self.rotation))
 
-        self._right_curve_eq = Ellipse(
-            self._curve_vertices["right-top"].midpoint(self._curve_vertices["right-bottom"]),
-            self._right_radius,
-            self._curve_vertices["right-top"].distance(self._curve_vertices["right-bottom"])
+    @property
+    def right_curve(self):
+        return Ellipse(
+            self.curve_vertices["right-top"].midpoint(self.curve_vertices["right-bottom"]),
+            self.right_radius,
+            self.curve_vertices["right-top"].distance(self.curve_vertices["right-bottom"])
         ).equation(x, y, _slope=tan(self.rotation))
-        # todo check if the equation is correct, the rotation is correct
-        # todo Update the equations of the sides
 
     def scale(self, scale_factor: float):
         """
@@ -152,11 +208,3 @@ class LenController(BasicController):
     def right_radius(self, radius: float):
         self._right_radius = radius
         self.calc()
-
-    @property
-    def vertices(self) -> dict:
-        return self._vertices
-
-    @property
-    def curve_vertices(self) -> dict:
-        return self._curve_vertices
