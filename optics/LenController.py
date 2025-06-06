@@ -1,4 +1,4 @@
-from sympy import Point2D, cos, sin, pi, Ellipse, tan, Ray2D, Segment2D, Circle
+from sympy import Point2D, cos, sin, pi, Ellipse, tan, Ray2D, Segment2D, Circle, Add, Eq
 from sympy.abc import x, y
 
 from conf import LEN_NORMAL_POINTS_DISTANCE
@@ -34,41 +34,48 @@ class LenController(BasicController):
         self.right_radius = right_radius
         self.d = d  # The thickness of the len
 
-        self.calc()
+        self.update_props()
         Solver.optical_objects.append(self)
 
     def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
         intersections = []
         has_collision = False
-        for key,side in self.sides.items():
+        for key, side in self.sides.items():
             if Solver.first_intersection(ray, side):
                 has_collision = True
         if not has_collision:
             return None
 
-        def check_curve(ray_obj: Ray2D, curve: Ellipse, radius: float):
-            if not (curve_intersections := Solver.all_intersections(ray_obj, curve)): #fixme
+        def check_curve(ray_obj: Ray2D, curve_eq: Eq, h_radius: float):
+            if not (curve_intersections := Solver.all_intersections(ray_obj, curve_eq)):
                 return None
             curve_intersections = Solver.sort_by_distance(ray_obj.source, curve_intersections)
-            if radius >= 0:
+            print("Curve intersections:", curve_intersections)
+            if h_radius >= 0:
+                circle_x, circle_y = curve_intersections[0]
+                circle_eq = Eq((x - circle_x) ** 2 + (y - circle_y) ** 2, LEN_NORMAL_POINTS_DISTANCE ** 2)
                 return {
                     "point": curve_intersections[0],
                     "side": Segment2D(
-                        *curve.intersection(
-                            Circle(curve_intersections[0], LEN_NORMAL_POINTS_DISTANCE)))
+                        *Solver.solve_safe(curve_eq, circle_eq)
+                    )
                 }
-            elif radius < 0:
+            elif h_radius < 0:
+                circle_x, circle_y = curve_intersections[-1]
+                circle_eq = Eq((x - circle_x) ** 2 + (y - circle_y) ** 2, LEN_NORMAL_POINTS_DISTANCE ** 2)
                 return {
                     "point": curve_intersections[-1],
                     "side": Segment2D(
-                        *curve.intersection(
-                            Circle(curve_intersections[-1], LEN_NORMAL_POINTS_DISTANCE)))
+                        *Solver.solve_safe(curve_eq, circle_eq)
+                    )
                 }
             return None
 
-        intersections.append(check_curve(ray, self.left_curve, self.left_radius))
-        intersections.append(check_curve(ray, self.right_curve, self.right_radius))
-        # todo
+        for curve, radius in [(self.left_curve, self.left_radius), (self.right_curve, self.right_radius)]:
+            intersection = check_curve(ray, curve, radius)
+            print("curve", curve)
+            if intersection:
+                intersections.append(intersection)
         intersections = list(filter(lambda cp: cp["point"] != round_point(ray.source), intersections))
         if intersections:
             closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
@@ -79,7 +86,7 @@ class LenController(BasicController):
             }
         return None
 
-    def calc(self):
+    def update_props(self):
         """
         Calculates and updates the len.
         """
@@ -127,19 +134,20 @@ class LenController(BasicController):
 
     @property
     def left_curve(self):
-        return Ellipse(
-            self.curve_vertices["left-top"].midpoint(self.curve_vertices["left-bottom"]),
-            self.left_radius,
-            self.curve_vertices["left-top"].distance(self.curve_vertices["left-bottom"])
-        ).equation(x, y, _slope=tan(self.rotation))
+        pos_x, pos_y = self.curve_vertices["left-top"].midpoint(self.curve_vertices["left-bottom"])
+        h_radius = abs(self.left_radius)
+        v_radius = self.curve_vertices["left-top"].distance(self.curve_vertices["left-bottom"])
+        theta = tan(self.rotation)
+
+        return Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
 
     @property
     def right_curve(self):
-        return Ellipse(
-            self.curve_vertices["right-top"].midpoint(self.curve_vertices["right-bottom"]),
-            self.right_radius,
-            self.curve_vertices["right-top"].distance(self.curve_vertices["right-bottom"])
-        ).equation(x, y, _slope=tan(self.rotation))
+        pos_x, pos_y = self.curve_vertices["right-top"].midpoint(self.curve_vertices["right-bottom"])
+        h_radius = abs(self.right_radius)
+        v_radius = self.curve_vertices["right-top"].distance(self.curve_vertices["right-bottom"])
+        theta = tan(self.rotation)
+        return Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
 
     def scale(self, scale_factor: float):
         """
@@ -149,7 +157,7 @@ class LenController(BasicController):
         self.height *= scale_factor
         self.left_radius *= scale_factor
         self.right_radius *= scale_factor
-        self.calc()
+        self.update_props()
 
     @property
     def pos(self) -> Point2D:
@@ -158,7 +166,7 @@ class LenController(BasicController):
     @pos.setter
     def pos(self, point: Point2D):
         self._pos = point
-        self.calc()
+        self.update_props()
 
     @property
     def height(self) -> float:
@@ -167,7 +175,7 @@ class LenController(BasicController):
     @height.setter
     def height(self, height: float):
         self._height = height
-        self.calc()
+        self.update_props()
 
     @property
     def rotation(self) -> float:
@@ -176,7 +184,7 @@ class LenController(BasicController):
     @rotation.setter
     def rotation(self, rotation: float):
         self._rotation = rotation
-        self.calc()
+        self.update_props()
 
     @property
     def d(self) -> float:
@@ -189,7 +197,7 @@ class LenController(BasicController):
         if d < 0:
             raise ValueError("The thickness of the lens must be a positive value.")
         self._d = d
-        self.calc()
+        self.update_props()
 
     @property
     def left_radius(self) -> float:
@@ -198,7 +206,7 @@ class LenController(BasicController):
     @left_radius.setter
     def left_radius(self, radius: float):
         self._left_radius = radius
-        self.calc()
+        self.update_props()
 
     @property
     def right_radius(self) -> float:
@@ -207,4 +215,4 @@ class LenController(BasicController):
     @right_radius.setter
     def right_radius(self, radius: float):
         self._right_radius = radius
-        self.calc()
+        self.update_props()
