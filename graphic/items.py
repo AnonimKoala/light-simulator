@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsIt
 from sympy import pi, cos, sin
 from graphic.base import SceneItem, ZoomableView
 from conf import RAY_MAX_LENGTH, RAY_PEN_WIDTH
+from optics.util import round_point
 
 
 class EllipseItem(QGraphicsEllipseItem, SceneItem):
@@ -257,8 +258,8 @@ class RayGraphicItem(QGraphicsItem):
     @property
     def start_point(self):
         if not self.parent:
-            return self._start_point
-        return self.parent.source_point
+            return round_point(self._start_point)
+        return round_point(self.parent.source_point)
 
     @property
     def inf_point(self):
@@ -279,8 +280,8 @@ class RayGraphicItem(QGraphicsItem):
 
     @property
     def angle_deg(self):
-        return self.parent.rotation() if self.parent else 0
+        return int(self.parent.rotation() if self.parent else 0)
 
     @property
     def angle_rad(self):
-        return self.angle_deg * pi / 180
+        return int(self.angle_deg * pi / 180)

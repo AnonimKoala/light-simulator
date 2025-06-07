@@ -4,7 +4,7 @@ from sympy.geometry.entity import GeometrySet
 
 from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS
 from optics.BasicController import BasicController
-from optics.util import round_point, round_ray, angle_to_ox
+from optics.util import round_point, round_ray, angle_to_ox, string_points
 
 
 class Solver:
@@ -19,6 +19,7 @@ class Solver:
         :param ray: The ray to check for collisions
         :type ray: Ray
         """
+        print("first_collision called with ray:", ray)
         collisions = []
         for obj in Solver.optical_objects:
             if collision_data := obj.get_collision(ray):
@@ -26,6 +27,9 @@ class Solver:
         if collisions:
             # Filter out collisions that are the same as the ray source
             collisions = [cp for cp in collisions if round_point(cp["point"]) != round_point(ray.source)]
+            if not collisions:
+                print("No collisions found for ray:", ray)
+                return None
             nearest = min(collisions, key=lambda cp: cp["point"].distance(round_point(ray.source)))
             nearest["point"] = round_point(nearest["point"])
             return nearest
@@ -98,7 +102,9 @@ class Solver:
         if not isinstance(obj, GeometrySet):  # For Eq objects like Ellipse.equation()
             A, B, C = Line2D(*ray.points).coefficients
             line_eq = Eq(A * x + B * y + C, 0)
+            print("Line equation:", line_eq)
             points = Solver.solve_safe(line_eq, obj)
+            print("Solutions", string_points(points))
             return points
 
         if intersections := ray.intersection(obj):
