@@ -27,17 +27,34 @@ class LenController(BasicController):
         :type pos_y: float
         """
 
-        self.pos = Point2D(pos_x, pos_y)
-        self.height = height
-        self.rotation = 0  # Rotation in radians about the OX axis
-        self.left_radius = left_radius
-        self.right_radius = right_radius
-        self.d = d  # The thickness of the len
+        self._pos = Point2D(pos_x, pos_y)
+        self._height = height
+        self._rotation = 0  # Rotation in radians about the OX axis
+        self._left_radius = left_radius
+        self._right_radius = right_radius
+        self._d = d  # The thickness of the len
 
         self._vertices = {}
+        self._sides = None
+        self._curve_vertices = {}
+        self._right_curve = None
+        self._left_curve = None
 
+        self.validate()
         self.update_props()
         Solver.optical_objects.append(self)
+
+    def validate(self):
+        """
+        Validates the properties of the lens.
+        Raises ValueError if any property is invalid.
+        """
+        if self.d < self.left_radius + self.right_radius:
+            raise ValueError("The thickness of the lens must be greater than the sum of the radii.")
+        if self.d < 0:
+            raise ValueError("The thickness of the lens must be a positive value.")
+        if self.height <= 0:
+            raise ValueError("The height of the lens must be a positive value.")
 
     def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
         intersections = []
@@ -81,6 +98,7 @@ class LenController(BasicController):
         intersections = list(filter(lambda cp: cp["point"] != round_point(ray.source), intersections))
         if intersections:
             closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
+            print("got intersection:", closest_intersection)
             return {
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
@@ -92,27 +110,40 @@ class LenController(BasicController):
         """
         Calculates and updates the len.
         """
-
+        self.calc_curve_vertices()
+        self.calc_vertices()
+        self.calc_sides()
+        self.calc_left_curve()
+        self.calc_right_curve()
         # todo check if the equation is correct, the rotation is correct
-        # todo Update the equations of the sides
 
     @property
     def vertices(self) -> dict:
-        d2cos = (self.d / 2) * cos(deg2rad(self.rotation))
-        d2sin = (self.d / 2) * sin(deg2rad(self.rotation))
+        return self._vertices
+
+    def calc_vertices(self):
         height2cos = (self.height / 2) * cos(deg2rad(self.rotation))
         height2sin = (self.height / 2) * sin(deg2rad(self.rotation))
+        restd2 = (self.d - abs(self.left_radius) - abs(self.right_radius)) / 2
 
-        return {
-            "top-left": round_point(Point2D(self.pos.x - d2cos - height2sin, self.pos.y - d2sin + height2cos)),
-            "top-right": round_point(Point2D(self.pos.x + d2cos - height2sin, self.pos.y + d2sin + height2cos)),
-            "bottom-right": round_point(Point2D(self.pos.x + d2cos + height2sin, self.pos.y + d2sin - height2cos)),
-            "bottom-left": round_point(Point2D(self.pos.x - d2cos + height2sin, self.pos.y - d2sin - height2cos)),
+        d2cos_left = (abs(self.left_radius) + restd2)  * cos(deg2rad(self.rotation))
+        d2sin_left = (abs(self.left_radius) + restd2) * sin(deg2rad(self.rotation))
+        d2cos_right = (abs(self.right_radius) + restd2) * cos(deg2rad(self.rotation))
+        d2sin_right = (abs(self.right_radius) + restd2) * sin(deg2rad(self.rotation))
+
+        self._vertices = {
+            "top-left": round_point(Point2D(self.pos.x - d2cos_left - height2sin, self.pos.y - d2sin_left + height2cos)),
+            "top-right": round_point(Point2D(self.pos.x + d2cos_right - height2sin, self.pos.y + d2sin_right + height2cos)),
+            "bottom-right": round_point(Point2D(self.pos.x + d2cos_right + height2sin, self.pos.y + d2sin_right - height2cos)),
+            "bottom-left": round_point(Point2D(self.pos.x - d2cos_left + height2sin, self.pos.y - d2sin_left - height2cos)),
         }
 
     @property
     def sides(self) -> dict:
-        return {
+        return self._sides
+
+    def calc_sides(self):
+        self._sides = {
             "top": Segment2D(self.vertices["top-left"], self.vertices["top-right"]),
             "bottom": Segment2D(self.vertices["bottom-left"], self.vertices["bottom-right"]),
             "left": Segment2D(self.vertices["top-left"], self.vertices["bottom-left"]),
@@ -121,7 +152,7 @@ class LenController(BasicController):
 
     @property
     def curve_vertices(self) -> dict:
-        return self._vertices
+        return self._curve_vertices
 
     def calc_curve_vertices(self):
         h2sin = (self.height / 2) * sin(self.rotation)
@@ -135,6 +166,7 @@ class LenController(BasicController):
         right_shift = abs(self.right_radius) + rest_d2 if self.right_radius < 0 else rest_d2
         d2rest_cos_right = right_shift * cos(self.rotation)
         d2rest_sin_right = right_shift * sin(self.rotation)
+
         result = {  # Stores middle top/bottom points of curves
             "left-top": Point2D(
                 self.pos.x - d2rest_cos_left - h2sin,
@@ -146,24 +178,31 @@ class LenController(BasicController):
         for key, point in result.items():
             result[key] = round_point(point)
         print(result)
-        self._vertices = result
+        self._curve_vertices = result
 
     @property
     def left_curve(self):
+        return self._left_curve
+
+    def calc_left_curve(self):
         pos_x, pos_y = self.curve_vertices["left-top"].midpoint(self.curve_vertices["left-bottom"])
         h_radius = abs(self.left_radius)
         v_radius = self.curve_vertices["left-top"].distance(self.curve_vertices["left-bottom"])
         theta = tan(self.rotation)
-
-        return Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
+        print(f"Left curve: pos=({pos_x}, {pos_y}), h_radius={h_radius}, v_radius={v_radius}, theta={theta}")
+        self._left_curve = Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
 
     @property
     def right_curve(self):
+        return self._right_curve
+
+    def calc_right_curve(self):
         pos_x, pos_y = self.curve_vertices["right-top"].midpoint(self.curve_vertices["right-bottom"])
         h_radius = abs(self.right_radius)
         v_radius = self.curve_vertices["right-top"].distance(self.curve_vertices["right-bottom"])
         theta = tan(self.rotation)
-        return Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
+        print(f"Right curve: pos=({pos_x}, {pos_y}), h_radius={h_radius}, v_radius={v_radius}, theta={theta}")
+        self._right_curve = Solver.calc_ellipse_eq(pos_x, pos_y, h_radius, v_radius, theta)
 
     def scale(self, scale_factor: float):
         """
