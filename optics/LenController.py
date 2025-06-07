@@ -1,3 +1,5 @@
+from typing import Literal
+
 from sympy import Point2D, cos, sin, pi, Ellipse, tan, Ray2D, Segment2D, Circle, Add, Eq
 from sympy.abc import x, y
 
@@ -5,7 +7,8 @@ from conf import LEN_NORMAL_POINTS_DISTANCE
 from optics.BasicController import BasicController
 from optics.RayController import RayController
 from optics.Solver import Solver
-from optics.util import round_point, round_line, round_ray, round_segment, deg2rad
+from optics.util import round_point, round_line, round_ray, round_segment, deg2rad, string_points, \
+    is_point_inside_polygon
 
 
 class LenController(BasicController):
@@ -65,40 +68,49 @@ class LenController(BasicController):
         if not has_collision:
             return None
 
-        def check_curve(ray_obj: Ray2D, curve_eq: Eq, h_radius: float):
+        def check_curve(ray_obj: Ray2D, curve_eq: Eq, h_radius: float, side_type: str):
             if not (curve_intersections := Solver.all_intersections(ray_obj, curve_eq)):
                 return None
             curve_intersections = Solver.sort_by_distance(ray_obj.source, curve_intersections)
-            print("Curve intersections:", curve_intersections)
+            print("Curve intersections:", string_points(curve_intersections))
+            polygon = []
             if h_radius >= 0:
-                circle_x, circle_y = curve_intersections[0]
-                circle_eq = Eq((x - circle_x) ** 2 + (y - circle_y) ** 2, LEN_NORMAL_POINTS_DISTANCE ** 2)
-                return {
-                    "point": curve_intersections[0],
-                    "side": Segment2D(
-                        *Solver.solve_safe(curve_eq, circle_eq)
-                    )
-                }
+                polygon = [
+                    self.vertices[f"top-{side_type}"],
+                    self.vertices[f"bottom-{side_type}"],
+                    self.curve_vertices[f"{side_type}-bottom"],
+                    self.curve_vertices[f"{side_type}-top"]
+                ]
             elif h_radius < 0:
-                circle_x, circle_y = curve_intersections[-1]
-                circle_eq = Eq((x - circle_x) ** 2 + (y - circle_y) ** 2, LEN_NORMAL_POINTS_DISTANCE ** 2)
-                return {
-                    "point": curve_intersections[-1],
-                    "side": Segment2D(
-                        *Solver.solve_safe(curve_eq, circle_eq)
-                    )
-                }
+                polygon = [
+                    self.vertices[f"top-left"],
+                    self.vertices[f"bottom-left"],
+                    self.vertices[f"bottom-right"],
+                    self.vertices[f"top-right"],
+                ]
+            for point in curve_intersections:
+                if is_point_inside_polygon(point, polygon):
+                    print(f"is_point_inside {side_type} : {string_points(point)}")
+                    circle_x, circle_y = point
+                    circle_eq = Eq((x - circle_x) ** 2 + (y - circle_y) ** 2, LEN_NORMAL_POINTS_DISTANCE ** 2)
+                    return {
+                        "point": point,
+                        "side": Segment2D(
+                            *Solver.solve_safe(curve_eq, circle_eq)
+                        )
+                    }
             return None
 
-        for curve, radius in [(self.left_curve, self.left_radius), (self.right_curve, self.right_radius)]:
-            intersection = check_curve(ray, curve, radius)
-            print("curve", curve)
+        for curve, radius, side in [(self.left_curve, self.left_radius, "left"), (self.right_curve, self.right_radius, "right")]:
+            intersection = check_curve(ray, curve, radius, side)
             if intersection:
                 intersections.append(intersection)
         intersections = list(filter(lambda cp: cp["point"] != round_point(ray.source), intersections))
         if intersections:
+            print("Intersections found:", intersections)
             closest_intersection = min(intersections, key=lambda cp: cp["point"].distance(ray.source))
-            print("got intersection:", closest_intersection)
+            print("got intersection:", string_points(closest_intersection))
+            print("With ray:", ray)
             return {
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
@@ -137,6 +149,8 @@ class LenController(BasicController):
             "bottom-right": round_point(Point2D(self.pos.x + d2cos_right + height2sin, self.pos.y + d2sin_right - height2cos)),
             "bottom-left": round_point(Point2D(self.pos.x - d2cos_left + height2sin, self.pos.y - d2sin_left - height2cos)),
         }
+
+        print("Vertices:", self._vertices)
 
     @property
     def sides(self) -> dict:
@@ -179,6 +193,8 @@ class LenController(BasicController):
             result[key] = round_point(point)
         print(result)
         self._curve_vertices = result
+
+        print("Curve vertices:", self._curve_vertices)
 
     @property
     def left_curve(self):
