@@ -34,6 +34,8 @@ class LenController(BasicController):
         self.right_radius = right_radius
         self.d = d  # The thickness of the len
 
+        self._vertices = {}
+
         self.update_props()
         Solver.optical_objects.append(self)
 
@@ -119,18 +121,32 @@ class LenController(BasicController):
 
     @property
     def curve_vertices(self) -> dict:
+        return self._vertices
+
+    def calc_curve_vertices(self):
         h2sin = (self.height / 2) * sin(self.rotation)
         h2cos = (self.height / 2) * cos(self.rotation)
-        rest_d2 = (self.d - self.left_radius - self.right_radius) / 2
-        d2rest_cos = (self.d / 2 + rest_d2) * cos(self.rotation)
-        d2rest_sin = (self.d / 2 + rest_d2) * sin(self.rotation)
+        rest_d2 = (self.d - abs(self.left_radius) - abs(self.right_radius)) / 2
 
-        return {  # Stores middle top/bottom points of curves
-            "left-top": Point2D(self.pos.x - d2rest_cos - h2sin, self.pos.y - d2rest_sin + h2cos),
-            "left-bottom": Point2D(self.pos.x - d2rest_cos + h2sin, self.pos.y - d2rest_sin - h2cos),
-            "right-top": Point2D(self.pos.x + d2rest_cos - h2sin, self.pos.y + d2rest_sin + h2cos),
-            "right-bottom": Point2D(self.pos.x + d2rest_cos + h2sin, self.pos.y + d2rest_sin - h2cos),
+        left_shift = abs(self.left_radius) + rest_d2 if self.left_radius < 0 else rest_d2
+        d2rest_cos_left = left_shift * cos(self.rotation)
+        d2rest_sin_left = left_shift * sin(self.rotation)
+
+        right_shift = abs(self.right_radius) + rest_d2 if self.right_radius < 0 else rest_d2
+        d2rest_cos_right = right_shift * cos(self.rotation)
+        d2rest_sin_right = right_shift * sin(self.rotation)
+        result = {  # Stores middle top/bottom points of curves
+            "left-top": Point2D(
+                self.pos.x - d2rest_cos_left - h2sin,
+                self.pos.y - d2rest_sin_left + h2cos),
+            "left-bottom": Point2D(self.pos.x - d2rest_cos_left + h2sin, self.pos.y - d2rest_sin_left - h2cos),
+            "right-top": Point2D(self.pos.x + d2rest_cos_right - h2sin, self.pos.y + d2rest_sin_right + h2cos),
+            "right-bottom": Point2D(self.pos.x + d2rest_cos_right + h2sin, self.pos.y + d2rest_sin_right - h2cos),
         }
+        for key, point in result.items():
+            result[key] = round_point(point)
+        print(result)
+        self._vertices = result
 
     @property
     def left_curve(self):
