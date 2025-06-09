@@ -70,9 +70,5 @@ Len(0, 10, 200, view, -30, 30)
 
 ## License
 
-MIT License
-
----
-
-*This project is designed for educational and experimental ray tracing simulations in Python.*
+This code is provided for personal or internal use only. Modification, redistribution, or commercial use is strictly prohibited. 
 
