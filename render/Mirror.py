@@ -16,6 +16,7 @@ class Mirror(RectangleItem):
         self.controller = MirrorController(self.center_pos().x(), self.center_pos().y(), width, height)
 
         self._timer_active = False
+        view.scene().addItem(self)
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange or change == QGraphicsItem.GraphicsItemChange.ItemRotationChange:

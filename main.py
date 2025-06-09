@@ -15,25 +15,26 @@ def main():
     scene = QGraphicsScene()
     scene.setSceneRect(-SCENE_SIZE / 2, -SCENE_SIZE / 2, SCENE_SIZE, SCENE_SIZE)  # Define coordinate bounds
 
-    # Create a zoomable view and set the scene
-    view = ZoomableView(scene)
-    view.scale(1, -1)
+    view = ZoomableView(scene)   # Create a zoomable view and set the scene
+    view.scale(1, -1)        # Invert the y-axis for correct orientation
     view.setWindowTitle("Light Simulator")
 
-    len_obj = Len(0, 10, 60, 200, view, -30, 30)
-    scene.addItem(len_obj)
+    ###################################################################
+    # Place your objects here
+    # Example objects can be added to the scene
+    # Uncomment the following lines to add objects to the scene
 
-    # m = Mirror(0,0, 20,200, view)
-    # scene.addItem(m)
-    # m2 = Mirror(-100,0, 20,200, view)
-    # scene.addItem(m2)
+    # Mirror(100,50, 20,200, view)
+    # Len(0, 10, 200, view, -30, 30)
+    # Laser(50, 50, 50, view)
 
-    laser = Laser(50, 50, 50, view)
-    scene.addItem(laser)
+    Mirror(0,0, 20,200, view)
+    Laser(150, 50, 50, view)
+
+    ###################################################################
 
     view.resize(800, 600)
     view.show()
-
     sys.exit(app.exec())
 
 

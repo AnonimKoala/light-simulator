@@ -29,6 +29,7 @@ class Laser(RectangleItem):
         ]
         Solver.lasers.append(self)
         self._timer_active = False
+        view.scene().addItem(self)
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange or change == QGraphicsItem.GraphicsItemChange.ItemRotationChange:
