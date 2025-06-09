@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, 
     QGraphicsSceneMouseEvent, QGraphicsScene
 
 from graphic.config import FONT_SIZE
-from tools import convert_qt_angle2cartesian
 
 
 class ScalePoint(QGraphicsEllipseItem):
@@ -125,6 +124,10 @@ class ZoomableView(QGraphicsView):
 
             print("Rotation mode:", "ON" if self.rotation_mode else "OFF")
 
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        print(self.mapToScene(event.pos()))
+        super().mouseDoubleClickEvent(event)
+
     def mousePressEvent(self, event: QMouseEvent):
         """
         Handle mouse press events for initiating rotation.
@@ -157,13 +160,13 @@ class ZoomableView(QGraphicsView):
             center_pos = self.selected_item.sceneBoundingRect().center()
 
             # Calculate instantaneous angle
-            angle = math.degrees(math.atan2(current_pos.y() - center_pos.y(),
-                                            current_pos.x() - center_pos.x()))
-            initial_angle = math.degrees(math.atan2(self.origin_pos.y() - center_pos.y(),
-                                                    self.origin_pos.x() - center_pos.x()))
+            angle = int(round(math.degrees(math.atan2(current_pos.y() - center_pos.y(),
+                                                      current_pos.x() - center_pos.x()))))
+            initial_angle = int(round(math.degrees(math.atan2(self.origin_pos.y() - center_pos.y(),
+                                                              self.origin_pos.x() - center_pos.x()))))
 
             # Calculate rotation difference
-            rotation_diff = angle - initial_angle
+            rotation_diff = int(angle - initial_angle)
 
             # Determine rotation direction
             if rotation_diff > 0:
@@ -179,11 +182,7 @@ class ZoomableView(QGraphicsView):
                 rotation_angle = 0
 
             self.selected_item.setRotation(rotation_angle)
-            self.selected_item.update_hint_text(convert_qt_angle2cartesian(rotation_angle))
-            print(
-                f"Current Angle: {convert_qt_angle2cartesian(rotation_angle):.2f}\t"
-                f"Start: {self.start_rotation} Diff: {rotation_diff}°"
-            )
+            self.selected_item.update_hint_text(rotation_angle)
         super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent):
@@ -326,7 +325,8 @@ class SceneItem(QGraphicsItem):
 
         # Create a text item for the rotation hint
         self.rotation_hint = QGraphicsSimpleTextItem("0°")
-        self.rotation_hint.setZValue(1)  # Ensure it's on top of other items
+        self.rotation_hint.setFlag(QGraphicsSimpleTextItem.GraphicsItemFlag.ItemIgnoresTransformations)
+        self.rotation_hint.setZValue(3)  # Ensure it's on top of other items
         self.rotation_hint.setBrush(QBrush(Qt.GlobalColor.white))  # Set text color to white
         self.font = QFont("Arial", FONT_SIZE)  # Default font size
         self.rotation_hint.setFont(self.font)
@@ -373,7 +373,7 @@ class SceneItem(QGraphicsItem):
         :return: Any - The result of the base class implementation.
         """
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange:
-            print(f"New position: {self.pos().x()} {self.pos().y()}")
+            print(f"New position: Absolute {self.pos()} | Relative {value} | Mapped to scene {self.mapToScene(value)}")
         return super().itemChange(change, value)
 
     def focusInEvent(self, event: QFocusEvent):
@@ -487,3 +487,7 @@ class SceneItem(QGraphicsItem):
     def update_transform_origin(self):
         """Set the rotation origin to the center of the bounding rectangle."""
         self.setTransformOriginPoint(self.boundingRect().center())  # Set rotation origin
+
+    def center_pos(self):
+        """Get the center position of the item."""
+        return self.mapToScene(QPointF(self.width / 2, self.height / 2))
