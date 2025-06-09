@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsIt
 from sympy import pi, cos, sin
 from graphic.base import SceneItem, ZoomableView
 from conf import RAY_MAX_LENGTH, RAY_PEN_WIDTH
+from optics.util import round_point
 
 
 class EllipseItem(QGraphicsEllipseItem, SceneItem):
@@ -67,7 +68,9 @@ class LenGraphicItem(SceneItem):
     def __init__(self, x: float, y: float, width: float, height: float, view: ZoomableView, left_radius: float,
                  right_radius: float):
         SceneItem.__init__(self, x, y, width, height, view)
+        view.scene().addItem(self)
         self.setPos(x, y)
+        self.itemChange(QGraphicsItem.GraphicsItemChange.ItemPositionChange, QPointF(x,y))
         self._brush = QBrush(QColor(0, 128, 128))
         self.left_radius = left_radius
         self.right_radius = right_radius
@@ -131,6 +134,14 @@ class LenGraphicItem(SceneItem):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(self.brush())
         painter.drawPath(path)
+        # Draw a small dot at the lens position (center)
+        center_x = int(self.width / 2)
+        center_y = int(self.height / 2)
+        dot_radius = 3
+        painter.setPen(QPen(QColor("blue"), 1))
+        painter.setBrush(QBrush(QColor("blue")))
+        painter.drawEllipse(center_x - dot_radius, center_y - dot_radius, dot_radius * 2, dot_radius * 2)
+        # painter.drawRect(self.boundingRect())
 
     def brush(self):
         return getattr(self, "_brush", QBrush(QColor(0, 128, 128)))
@@ -245,8 +256,8 @@ class RayGraphicItem(QGraphicsItem):
     @property
     def start_point(self):
         if not self.parent:
-            return self._start_point
-        return self.parent.source_point
+            return round_point(self._start_point)
+        return round_point(self.parent.source_point)
 
     @property
     def inf_point(self):
@@ -267,8 +278,8 @@ class RayGraphicItem(QGraphicsItem):
 
     @property
     def angle_deg(self):
-        return self.parent.rotation() if self.parent else 0
+        return int(self.parent.rotation() if self.parent else 0)
 
     @property
     def angle_rad(self):
-        return self.angle_deg * pi / 180
+        return int(self.angle_deg * pi / 180)

@@ -1,16 +1,20 @@
-"""
-The Winding Number algorithm determines whether a point lies inside a polygon by calculating how many times the polygon winds around the point.
 
-Algorithm Description
-    - For each edge of the polygon, compute the angle subtended at P(x,y).
-    - Sum these angles; if the total is 2π, P lies inside; if 0, P lies outside.
-"""
+from PyQt6.QtCore import QPointF
 from sympy import N, pi, Point2D, Ray as SympyRay, Line2D, Segment2D, atan2
 
 from conf import ROUNDING_PRECISION
 
 
 def is_point_inside_polygon(point, polygon):
+    """
+    The Winding Number algorithm determines whether a point lies inside a polygon by calculating how many times the polygon winds around the point.
+
+    Algorithm Description
+        - For each edge of the polygon, compute the angle subtended at P(x,y).
+        - Sum these angles; if the total is 2π, P lies inside; if 0, P lies outside.
+    """
+    if not polygon:
+        print("Not polygon provided!")
     x, y = point
     wn = 0  # Winding number
 
@@ -36,7 +40,9 @@ def deg2rad(deg):
 def rad2deg(rad):
     return rad * (180.0 / pi)
 
-def round_point(point: Point2D):
+def round_point(point: Point2D | QPointF):
+    if isinstance(point, QPointF):
+        return QPointF(round_and_float(point.x()), round_and_float(point.y()))
     return Point2D(round_and_float(point.x), round_and_float(point.y))
 
 def round_ray(ray: SympyRay):
@@ -53,3 +59,19 @@ def angle_to_ox(obj: Line2D | Segment2D | SympyRay):
     dy = obj.p2.y - obj.p1.y
     theta = atan2(dy, dx)
     return theta
+
+def string_points(points):
+    if isinstance(points, Point2D):
+        return f"{round_and_float(points.x)}, {round_and_float(points.y)}"
+    if isinstance(points, QPointF):
+        return f"{round_and_float(points.x())}, {round_and_float(points.y())}"
+    txt = "[ "
+    for point in points:
+        if isinstance(point, Point2D):
+            txt += f" Point2D({round_and_float(point.x)}, {round_and_float(point.y)}), "
+        elif isinstance(point, QPointF):
+            txt += f" QPointF({round_and_float(point.x())}, {round_and_float(point.y())}), "
+    txt += " ]"
+    return txt
+
+

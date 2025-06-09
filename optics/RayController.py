@@ -13,7 +13,7 @@ class RayController:
         self._angle_deg = 0.0
         self.ray = SympyRay(self.start_point, angle=self.angle_rad)
 
-    def update_props(self, start_point: QPointF, angle_deg: float):
+    def update_props(self, start_point: QPointF, angle_deg: int):
         self.start_point = Point2D(start_point.x(), start_point.y())
         self.angle_deg = angle_deg
         self.ray = SympyRay(self.start_point, angle=self.angle_rad)

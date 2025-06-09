@@ -2,7 +2,7 @@ from typing import Any
 from PyQt6.QtCore import QPointF, QTimer
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QGraphicsItem
-from conf import REFRESH_TIMEOUT
+from conf import REFRESH_LASER_TIMEOUT
 from graphic.base import ZoomableView
 from graphic.items import RectangleItem
 from optics.Solver import Solver
@@ -17,8 +17,8 @@ class Laser(RectangleItem):
         if not Laser._all_timer_active:
             Laser._all_timer_active = True
             for laser in Solver.lasers:
-                QTimer.singleShot(REFRESH_TIMEOUT, lambda: ([ray.calc() for ray in laser.rays],
-                                                            setattr(Laser, '_all_timer_active', False)))
+                QTimer.singleShot(REFRESH_LASER_TIMEOUT, lambda: ([ray.calc() for ray in laser.rays],
+                                                                  setattr(Laser, '_all_timer_active', False)))
 
     def __init__(self, x: float, y: float, size: float, view: ZoomableView):
         super().__init__(x, y, size * 2, size, view)
@@ -34,8 +34,8 @@ class Laser(RectangleItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionChange or change == QGraphicsItem.GraphicsItemChange.ItemRotationChange:
             if not self._timer_active:
                 self._timer_active = True
-                QTimer.singleShot(REFRESH_TIMEOUT, lambda: ([ray.update_props() for ray in self.rays],
-                                                            setattr(self, '_timer_active', False)))
+                QTimer.singleShot(REFRESH_LASER_TIMEOUT, lambda: ([ray.update_props() for ray in self.rays],
+                                                                  setattr(self, '_timer_active', False)))
 
         return super().itemChange(change, value)
 
