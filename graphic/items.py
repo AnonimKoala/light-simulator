@@ -143,8 +143,6 @@ class LenGraphicItem(SceneItem):
         painter.drawEllipse(center_x - dot_radius, center_y - dot_radius, dot_radius * 2, dot_radius * 2)
         # painter.drawRect(self.boundingRect())
 
-
-
     def brush(self):
         return getattr(self, "_brush", QBrush(QColor(0, 128, 128)))
 

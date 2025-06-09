@@ -4,6 +4,7 @@ import sys
 from graphic.base import ZoomableView
 from graphic.config import SCENE_SIZE
 from render.Laser import Laser
+from render.Len import Len
 from render.Mirror import Mirror
 
 
@@ -19,8 +20,13 @@ def main():
     view.scale(1, -1)
     view.setWindowTitle("Light Simulator")
 
-    mirror = Mirror(-100, -50, 20, 200, view)
-    scene.addItem(mirror)
+    len_obj = Len(0, 10, 60, 200, view, -30, 30)
+    scene.addItem(len_obj)
+
+    # m = Mirror(0,0, 20,200, view)
+    # scene.addItem(m)
+    # m2 = Mirror(-100,0, 20,200, view)
+    # scene.addItem(m2)
 
     laser = Laser(50, 50, 50, view)
     scene.addItem(laser)
