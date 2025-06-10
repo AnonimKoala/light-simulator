@@ -128,10 +128,10 @@ class Solver:
                         "end": round_point(collision["point"]),
                         "alpha_color": alpha
                     })
-                    if result := compute_ray_reflection(ray, collision, alpha):
-                        rays_fifo.append(result)
-                    # if result := compute_ray_refraction(ray, collision, alpha):
+                    # if result := compute_ray_reflection(ray, collision, alpha):
                     #     rays_fifo.append(result)
+                    if result := compute_ray_refraction(ray, collision, alpha):
+                        rays_fifo.append(result)
 
                 else:
                     collisions.append(
