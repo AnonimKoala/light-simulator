@@ -59,7 +59,7 @@ class LenController(BasicController):
         if self.height <= 0:
             raise ValueError("The height of the lens must be a positive value.")
 
-    def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D] | None:
+    def get_collision(self, ray: Ray2D) -> dict[str, Point2D | Segment2D | bool] | None:
         intersections = []
         has_collision = False
         for key, side in self.sides.items():
@@ -116,8 +116,30 @@ class LenController(BasicController):
                 "point": closest_intersection["point"],
                 "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
                 "material": self.material,
+                "is-from-inside": self.is_point_inside(ray.source),
             }
         return None
+
+
+    def is_point_inside(self, point: Point2D) -> bool:
+        """
+        Checks if a point is inside the lens's area.
+
+        Warning:
+           This function is in **beta**.
+           It does not give reliable results for all cases.
+
+        :param point: The point to check
+        :type point: Point2D
+        :return: True if the point is inside, False otherwise
+        """
+        polygon = [
+            self.vertices["top-left"],
+            self.vertices["top-right"],
+            self.vertices["bottom-right"],
+            self.vertices["bottom-left"]
+        ]
+        return is_point_inside_polygon(point, polygon)
 
     def update_props(self):
         """

@@ -80,9 +80,10 @@ class Solver:
             # Calculate the angle of incidence and refraction in radians
             normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
             ray_angle_to_ox = angle_to_ox(incident_ray)
-            n1 = 1  # Refractive index of air
-            n2 = collision_obj["material"].refractive_index # Refractive index of the material
-            # Snell's law: n1 * sin(theta1) = n2 * sin(theta2)
+            # Determine the refractive indices based on whether the ray is entering or exiting the medium
+            n1 = collision_obj["material"].refractive_index if collision_obj["is-from-inside"] else 1.0
+            n2 = 1.0 if collision_obj["is-from-inside"] else collision_obj["material"].refractive_index
+            # Using Snell's law to calculate the angle of refraction
             alpha = ray_angle_to_ox - normal_angle_to_ox
             sin_beta = (n1 / n2) * sin(alpha)
             if abs(sin_beta) > 1:
