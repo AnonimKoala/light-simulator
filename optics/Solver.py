@@ -60,11 +60,11 @@ class Solver:
         return sorted(objs, key=lambda obj: obj.distance(origin))
 
     @staticmethod
-    def get_path(ray: Ray2D) -> list[dict[str, Point2D]] | None:
+    def get_path(ray: Ray2D) -> list[dict[str, Point2D]]:
         collisions = []
 
         def compute_ray_reflection(incident_ray: Ray2D, collision_obj) -> None | Ray2D:
-            if collision_obj:
+            if not collision_obj:
                 return None
             # Calculate the angle of incidence and reflection in radians
             normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
