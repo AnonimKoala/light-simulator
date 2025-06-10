@@ -63,7 +63,7 @@ class Solver:
     def get_path(ray: Ray2D) -> list[dict[str, Point2D]] | None:
         collisions = []
 
-        def compute_ray_reflection(incident_ray: Ray2D) -> Point2D | Ray2D:
+        def compute_ray_reflection(incident_ray: Ray2D) -> None | Ray2D:
             if collision := Solver.find_first_collision(incident_ray):
                 collisions.append({"start": round_point(incident_ray.source), "end": round_point(collision["point"])})
                 normal_angle_to_ox = angle_to_ox(collision['normal'])
@@ -71,18 +71,20 @@ class Solver:
                 new_ray = round_ray(Ray2D(collision["point"], angle=new_ray_angle_to_ox))
                 return round_ray(new_ray)
             collisions.append({"start": round_point(incident_ray.source), "end": round_point(Solver.get_ray_inf_point(incident_ray))})
-            return Solver.get_ray_inf_point(incident_ray)
+            return None
 
+        rays_fifo = [ray]
         i = 0
         while True:
-            print(f"Iteration {i}, ray: {ray}")
             i += 1
-            result = compute_ray_reflection(ray)
-            if isinstance(result, Ray):
-                ray = result
-                if i > MAX_REFRACTIONS:
-                    break
-            if isinstance(result, Point2D):
+            print(f"Iteration {i}, ray: {ray}")
+            if len(rays_fifo) > 0:
+                ray = rays_fifo.pop()
+                if result := compute_ray_reflection(ray):
+                    rays_fifo.append(result)
+            else:
+                break
+            if i > MAX_REFRACTIONS:
                 break
         return collisions
 
