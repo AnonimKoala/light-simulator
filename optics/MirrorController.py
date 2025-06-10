@@ -29,7 +29,7 @@ class MirrorController(BasicController):
         self._rotation = 0
         self._vertices = {}
         self._sides = {}
-        self.material = Material(100, 10000)
+        self.material = Material.glass()
         self.update_props()
         Solver.optical_objects.append(self)
 
@@ -45,6 +45,7 @@ class MirrorController(BasicController):
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
                 "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
+                "material": self.material
             }
         return None
 

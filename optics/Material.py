@@ -3,36 +3,34 @@ class Material:
     The `Material` class allows the creation of materials with unique properties.
     """
 
-    def __init__(self, transparency, fracture):
+    def __init__(self, transparency, refractive_index):
         """
         Initializes an instance of the `Material` class.
 
         :param transparency: Transparency of the material
         :type transparency: float
 
-        :param fracture: Refractive index of the material
-        :type fracture: float
+        :param refractive_index: Refractive index of the material
+        :type refractive_index: float
         """
-        self.transparency = transparency
-        self.fracture = fracture
+        self._transparency = transparency
+        self._refractive_index = refractive_index
 
-    def setTransparency(self, t):
-        """
-        Sets the transparency of the material.
+    @property
+    def transparency(self):
+        return self._transparency
 
-        :param t: Transparency
-        :type t: float
-        """
-        self.transparency = t
+    @transparency.setter
+    def transparency(self, value):
+        self._transparency = value
 
-    def setFracture(self, f):
-        """
-        Sets the refractive index of the material.
+    @property
+    def refractive_index(self):
+        return self._refractive_index
 
-        :param f: Refractive index
-        :type f: float
-        """
-        self.fracture = f
+    @refractive_index.setter
+    def refractive_index(self, value):
+        self._refractive_index = value
 
     @staticmethod
     def glass():
@@ -41,8 +39,5 @@ class Material:
 
         - Transparency: 100%
         - Refractive index: 1.5
-
-        :return: Material
-        :rtype: Material
         """
         return Material(100, 1.5)

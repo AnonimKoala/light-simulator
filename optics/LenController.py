@@ -1,10 +1,9 @@
-from typing import Literal
-
 from sympy import Point2D, cos, sin, pi, Ellipse, tan, Ray2D, Segment2D, Circle, Add, Eq
 from sympy.abc import x, y
 
 from conf import LEN_NORMAL_POINTS_DISTANCE
 from optics.BasicController import BasicController
+from optics.Material import Material
 from optics.RayController import RayController
 from optics.Solver import Solver
 from optics.util import round_point, round_line, round_ray, round_segment, deg2rad, string_points, \
@@ -36,6 +35,7 @@ class LenController(BasicController):
         self._left_radius = left_radius
         self._right_radius = right_radius
         self._d = d  # The thickness of the len
+        self.material = Material.glass()
 
         self._vertices = {}
         self._sides = None
@@ -115,6 +115,7 @@ class LenController(BasicController):
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
                 "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
+                "material": self.material,
             }
         return None
 
