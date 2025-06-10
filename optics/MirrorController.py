@@ -3,7 +3,7 @@ from sympy import Point2D, cos, sin, Segment2D, Ray
 from .BasicController import BasicController
 from .Material import Material
 from .Solver import Solver
-from .util import deg2rad, round_point, round_segment, round_line
+from .util import deg2rad, round_point, round_segment, round_line, is_point_inside_polygon
 
 
 class MirrorController(BasicController):
@@ -29,11 +29,11 @@ class MirrorController(BasicController):
         self._rotation = 0
         self._vertices = {}
         self._sides = {}
-        self.material = Material(100, 10000)
+        self.material: Material = Material.glass()
         self.update_props()
         Solver.optical_objects.append(self)
 
-    def get_collision(self, ray: Ray) -> dict[str, Point2D | Segment2D] | None:
+    def get_collision(self, ray: Ray) -> dict[str, Point2D | Segment2D | Material | bool] | None:
         intersections = []
         for side in self.sides.values():
             if intersection_point := Solver.first_intersection(ray,side):
@@ -45,8 +45,29 @@ class MirrorController(BasicController):
                 "surface": closest_intersection["side"],
                 "point": closest_intersection["point"],
                 "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
+                "material": self.material,
+                "is-from-inside": self.is_point_inside(ray.source),
+                "thickness": self.width/100 # Assuming thickness [m] is the width of the mirror,
             }
         return None
+
+    def is_point_inside(self, point: Point2D | QPointF) -> bool:
+        """
+        Checks if a point is inside the mirror's area.
+
+        :param point: The point to check
+        :type point: Point2D or QPointF
+        :return: True if the point is inside, False otherwise
+        """
+        if isinstance(point, QPointF):
+            point = Point2D(point.x(), point.y())
+        polygon = [
+            self.vertices["top-left"],
+            self.vertices["top-right"],
+            self.vertices["bottom-right"],
+            self.vertices["bottom-left"]
+        ]
+        return is_point_inside_polygon(point, polygon)
 
     def update_props(self):
         """

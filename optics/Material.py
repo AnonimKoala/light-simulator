@@ -3,36 +3,46 @@ class Material:
     The `Material` class allows the creation of materials with unique properties.
     """
 
-    def __init__(self, transparency, fracture):
+    def __init__(self, transparency, refractive_index, absorption_coefficient):
         """
         Initializes an instance of the `Material` class.
 
         :param transparency: Transparency of the material
         :type transparency: float
 
-        :param fracture: Refractive index of the material
-        :type fracture: float
-        """
-        self.transparency = transparency
-        self.fracture = fracture
+        :param refractive_index: Refractive index of the material
+        :type refractive_index: float
 
-    def setTransparency(self, t):
+        :param absorption_coefficient: Absorption coefficient of the material [m⁻¹]
+        :type absorption_coefficient: float
         """
-        Sets the transparency of the material.
+        self._transparency = transparency
+        self._refractive_index = refractive_index
+        self._absorption_coefficient = absorption_coefficient
 
-        :param t: Transparency
-        :type t: float
-        """
-        self.transparency = t
+    @property
+    def transparency(self):
+        return self._transparency
 
-    def setFracture(self, f):
-        """
-        Sets the refractive index of the material.
+    @transparency.setter
+    def transparency(self, value):
+        self._transparency = value
 
-        :param f: Refractive index
-        :type f: float
-        """
-        self.fracture = f
+    @property
+    def refractive_index(self):
+        return self._refractive_index
+
+    @refractive_index.setter
+    def refractive_index(self, value):
+        self._refractive_index = value
+
+    @property
+    def absorption_coefficient(self):
+        return self._absorption_coefficient
+
+    @absorption_coefficient.setter
+    def absorption_coefficient(self, value):
+        self._absorption_coefficient = value
 
     @staticmethod
     def glass():
@@ -41,8 +51,6 @@ class Material:
 
         - Transparency: 100%
         - Refractive index: 1.5
-
-        :return: Material
-        :rtype: Material
         """
-        return Material(100, 1.5)
+        return Material(100, 1.5, 0.001)
+

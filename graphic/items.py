@@ -225,16 +225,16 @@ class RayGraphicItem(QGraphicsItem):
         gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
         pen = QPen(QBrush(gradient), self.pen_width)
         if len(self.path_points) > 0:
-            painter.setPen(QPen(QColor(255, 0, 0), self.pen_width))
-            for i in range(0, len(self.path_points) - 1):
+            current_pen_alpha = 55
+            painter.setPen(QPen(QColor(255, 155, 0, current_pen_alpha), self.pen_width))
+            print(self.path_points)
+            for i, point in enumerate(self.path_points):
+                pen_alpha = point.get("alpha_color", 255)
+                if pen_alpha != current_pen_alpha:
+                    current_pen_alpha = pen_alpha
+                    pen.setColor(QColor(255, 0, 0, current_pen_alpha))
+                    painter.setPen(pen)
                 painter.drawLine(self.path_points[i].get("start"), self.path_points[i].get("end"))
-            gradient = QLinearGradient(self.path_points[-1].get("start"), self.path_points[-1].get("end"))
-            gradient.setColorAt(0, QColor(255, 255, 0, 255))
-            gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
-            gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
-            pen = QPen(QBrush(gradient), self.pen_width)
-            painter.setPen(pen)
-            painter.drawLine(self.path_points[-1].get("start"), self.path_points[-1].get("end"))
         else:
             painter.setPen(pen)
             painter.drawLine(self.start_point, self.inf_point)
