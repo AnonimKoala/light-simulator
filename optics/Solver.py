@@ -1,4 +1,4 @@
-from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin, solve, Eq, tan
+from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin, solve, Eq, tan, asin
 from sympy.abc import x, y
 from sympy.geometry.entity import GeometrySet
 
@@ -63,15 +63,38 @@ class Solver:
     def get_path(ray: Ray2D) -> list[dict[str, Point2D]] | None:
         collisions = []
 
-        def compute_ray_reflection(incident_ray: Ray2D) -> None | Ray2D:
-            if collision := Solver.find_first_collision(incident_ray):
-                collisions.append({"start": round_point(incident_ray.source), "end": round_point(collision["point"])})
-                normal_angle_to_ox = angle_to_ox(collision['normal'])
-                new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(incident_ray) + pi
-                new_ray = round_ray(Ray2D(collision["point"], angle=new_ray_angle_to_ox))
-                return round_ray(new_ray)
-            collisions.append({"start": round_point(incident_ray.source), "end": round_point(Solver.get_ray_inf_point(incident_ray))})
-            return None
+        def compute_ray_reflection(incident_ray: Ray2D, collision_obj) -> None | Ray2D:
+            if collision_obj:
+                return None
+            # Calculate the angle of incidence and reflection in radians
+            normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
+            new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(incident_ray) + pi
+            # Moving the ray source point by vector to prevent it from being on the surface and causing infinite loop
+            new_ray_source = round_point(collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
+            new_ray = Ray2D(new_ray_source, angle=new_ray_angle_to_ox)
+            return round_ray(new_ray)
+
+        def compute_ray_refraction(incident_ray: Ray2D, collision_obj) -> None | Ray2D:
+            if not collision_obj:
+                return None
+            # Calculate the angle of incidence and refraction in radians
+            normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
+            ray_angle_to_ox = angle_to_ox(incident_ray)
+            n1 = 1  # Refractive index of air
+            n2 = collision_obj["material"].refractive_index # Refractive index of the material
+            # Snell's law: n1 * sin(theta1) = n2 * sin(theta2)
+            alpha = ray_angle_to_ox - normal_angle_to_ox
+            sin_beta = (n1 / n2) * sin(alpha)
+            if abs(sin_beta) > 1:
+                print("Total internal reflection, returning None")
+                return None
+            # Calculate the angle of refraction
+            beta_rad = asin(sin_beta)
+            new_ray_angle_to_ox = normal_angle_to_ox + beta_rad
+            # Calculate the new ray source point
+            new_ray_source = round_point(collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
+            new_ray = Ray2D(new_ray_source, angle=new_ray_angle_to_ox)
+            return round_ray(new_ray)
 
         rays_fifo = [ray]
         i = 0
@@ -80,8 +103,14 @@ class Solver:
             print(f"Iteration {i}, ray: {ray}")
             if len(rays_fifo) > 0:
                 ray = rays_fifo.pop()
-                if result := compute_ray_reflection(ray):
-                    rays_fifo.append(result)
+                if collision := Solver.find_first_collision(ray):
+                    collisions.append({"start": round_point(ray.source), "end": round_point(collision["point"])})
+                    if result := compute_ray_reflection(ray, collision):
+                        rays_fifo.append(result)
+                    if result := compute_ray_refraction(ray, collision):
+                        rays_fifo.append(result)
+                else:
+                    collisions.append({"start": round_point(ray.source), "end": round_point(Solver.get_ray_inf_point(ray))})
             else:
                 break
             if i > MAX_REFRACTIONS:
