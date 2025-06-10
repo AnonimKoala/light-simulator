@@ -40,7 +40,7 @@ def deg2rad(deg):
 def rad2deg(rad):
     return rad * (180.0 / pi)
 
-def round_point(point: Point2D | QPointF):
+def round_point(point: Point2D | QPointF) -> Point2D | QPointF:
     if isinstance(point, QPointF):
         return QPointF(round_and_float(point.x()), round_and_float(point.y()))
     return Point2D(round_and_float(point.x), round_and_float(point.y))

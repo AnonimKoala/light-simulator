@@ -197,7 +197,7 @@ class RayGraphicItem(QGraphicsItem):
         self.setZValue(1)
         self.pen_width = RAY_PEN_WIDTH
         self._inf_point = None
-        self._path_points: list[QPointF] = []
+        self._path_points: list[dict[str, QPointF]] = []
         self.view = view
         self.view.scene().addItem(self)
 
@@ -225,16 +225,16 @@ class RayGraphicItem(QGraphicsItem):
         gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
         pen = QPen(QBrush(gradient), self.pen_width)
         if len(self.path_points) > 0:
-            for i in range(1, len(self.path_points) - 1):
-                painter.setPen(QPen(QColor(255, 0, 0), self.pen_width))
-                painter.drawLine(self.path_points[i - 1], self.path_points[i])
-            gradient = QLinearGradient(self.path_points[-2], self.path_points[-1])
+            painter.setPen(QPen(QColor(255, 0, 0), self.pen_width))
+            for i in range(0, len(self.path_points) - 1):
+                painter.drawLine(self.path_points[i].get("start"), self.path_points[i].get("end"))
+            gradient = QLinearGradient(self.path_points[-1].get("start"), self.path_points[-1].get("end"))
             gradient.setColorAt(0, QColor(255, 255, 0, 255))
             gradient.setColorAt(0.85, QColor(255, 255, 0, 255))
             gradient.setColorAt(1.0, QColor(255, 255, 0, 0))
             pen = QPen(QBrush(gradient), self.pen_width)
             painter.setPen(pen)
-            painter.drawLine(self.path_points[-2], self.path_points[-1])
+            painter.drawLine(self.path_points[-1].get("start"), self.path_points[-1].get("end"))
         else:
             painter.setPen(pen)
             painter.drawLine(self.start_point, self.inf_point)

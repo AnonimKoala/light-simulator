@@ -60,15 +60,17 @@ class Solver:
         return sorted(objs, key=lambda obj: obj.distance(origin))
 
     @staticmethod
-    def get_refractions(ray: Ray2D) -> list[Point2D] | None:
+    def get_path(ray: Ray2D) -> list[dict[str, Point2D]] | None:
         collisions = []
 
         def compute_ray_reflection(incident_ray: Ray2D) -> Point2D | Ray2D:
             if collision := Solver.find_first_collision(incident_ray):
+                collisions.append({"start": round_point(incident_ray.source), "end": round_point(collision["point"])})
                 normal_angle_to_ox = angle_to_ox(collision['normal'])
                 new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(incident_ray) + pi
                 new_ray = round_ray(Ray2D(collision["point"], angle=new_ray_angle_to_ox))
                 return round_ray(new_ray)
+            collisions.append({"start": round_point(incident_ray.source), "end": round_point(Solver.get_ray_inf_point(incident_ray))})
             return Solver.get_ray_inf_point(incident_ray)
 
         i = 0
@@ -78,12 +80,9 @@ class Solver:
             result = compute_ray_reflection(ray)
             if isinstance(result, Ray):
                 ray = result
-                collisions.append(round_point(ray.source))
                 if i > MAX_REFRACTIONS:
-                    collisions.append(round_point(Solver.get_ray_inf_point(ray)))
                     break
             if isinstance(result, Point2D):
-                collisions.append(round_point(result))
                 break
         return collisions
 

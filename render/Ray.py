@@ -20,13 +20,11 @@ class Ray(RayGraphicItem):
         self.calc()
 
     def calc(self):
-        refractions = Solver.get_refractions(self.controller.ray)
-        refractions = [QPointF(obj.x, obj.y) for obj in refractions]
-        if refractions is None:
+        path = Solver.get_path(self.controller.ray)
+        for i, segment, in enumerate(path):
+            path[i] = {"start": QPointF(segment["start"].x, segment["start"].y), "end": QPointF(segment["end"].x, segment["end"].y)}
+        if path is None:
             self.path_points = []
         else:
-            self.path_points = [
-                self.start_point,
-                *refractions,
-            ]
+            self.path_points = path
         self.rerender()
