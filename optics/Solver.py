@@ -1,7 +1,7 @@
+from math import exp
 from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin, solve, Eq, tan, asin
 from sympy.abc import x, y
 from sympy.geometry.entity import GeometrySet
-
 from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS
 from optics.BasicController import BasicController
 from optics.util import round_point, round_ray, angle_to_ox, string_points
@@ -63,29 +63,47 @@ class Solver:
     def get_path(ray: Ray2D) -> list[dict[str, Point2D]]:
         collisions = []
 
-        def compute_ray_reflection(incident_ray: Ray2D, collision_obj) -> None | Ray2D:
+        def compute_ray_reflection(incident_ray: Ray2D, collision_obj, alpha_primary) -> None | list:
             if not collision_obj:
                 return None
             # Calculate the angle of incidence and reflection in radians
             normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
             new_ray_angle_to_ox = 2 * normal_angle_to_ox - angle_to_ox(incident_ray) + pi
             # Moving the ray source point by vector to prevent it from being on the surface and causing infinite loop
-            new_ray_source = round_point(collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
+            new_ray_source = round_point(
+                collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
             new_ray = Ray2D(new_ray_source, angle=new_ray_angle_to_ox)
-            return round_ray(new_ray)
+            # Determine the refractive indices based on whether the ray is entering or exiting the medium
+            if collision_obj["is-from-inside"]:
+                n1 = collision_obj["material"].refractive_index
+                n2 = 1
+            else:
+                n1 = 1
+                n2 = collision_obj["material"].refractive_index
+            # Calculate the absorption coefficient
+            alpha_color = Solver.calculate_alpha(alpha_primary, n1, n2, 0, 0, n2)
+            return [round_ray(new_ray), alpha_color]
 
-        def compute_ray_refraction(incident_ray: Ray2D, collision_obj) -> None | Ray2D:
+        def compute_ray_refraction(incident_ray: Ray2D, collision_obj, alpha_primary: float) -> None | list:
             if not collision_obj:
                 return None
             # Calculate the angle of incidence and refraction in radians
             normal_angle_to_ox = angle_to_ox(collision_obj['normal'])
             ray_angle_to_ox = angle_to_ox(incident_ray)
             # Determine the refractive indices based on whether the ray is entering or exiting the medium
-            n1 = collision_obj["material"].refractive_index if collision_obj["is-from-inside"] else 1.0
-            n2 = 1.0 if collision_obj["is-from-inside"] else collision_obj["material"].refractive_index
+            if collision_obj["is-from-inside"]:
+                n1 = collision_obj["material"].refractive_index
+                n2 = 1
+            else:
+                n1 = 1
+                n2 = collision_obj["material"].refractive_index
+            # Calculate the absorption coefficient
+            alpha_color = Solver.calculate_alpha(alpha_primary, n1, n2, collision_obj["material"].absorption_coefficient, collision_obj["thickness"])
+            print(f"n1: {n1}, n2: {n2}, alpha_primary: {alpha_primary}, absorption_coefficient: {collision_obj['material'].absorption_coefficient}, thickness: {collision_obj['thickness']}")
+            print("alpha_color:", alpha_color)
             # Using Snell's law to calculate the angle of refraction
-            alpha = ray_angle_to_ox - normal_angle_to_ox
-            sin_beta = (n1 / n2) * sin(alpha)
+            angle_of_incident = ray_angle_to_ox - normal_angle_to_ox
+            sin_beta = (n1 / n2) * sin(angle_of_incident)
             if abs(sin_beta) > 1:
                 print("Total internal reflection, returning None")
                 return None
@@ -93,25 +111,31 @@ class Solver:
             beta_rad = asin(sin_beta)
             new_ray_angle_to_ox = normal_angle_to_ox + beta_rad
             # Calculate the new ray source point
-            new_ray_source = round_point(collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
+            new_ray_source = round_point(
+                collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
             new_ray = Ray2D(new_ray_source, angle=new_ray_angle_to_ox)
-            return round_ray(new_ray)
-
-        rays_fifo = [ray]
+            return [round_ray(new_ray), alpha_color]
+        rays_fifo = [[ray, 255]]
         i = 0
         while True:
             i += 1
             print(f"Iteration {i}, ray: {ray}")
             if len(rays_fifo) > 0:
-                ray = rays_fifo.pop()
+                ray, alpha = rays_fifo.pop()
                 if collision := Solver.find_first_collision(ray):
-                    collisions.append({"start": round_point(ray.source), "end": round_point(collision["point"])})
-                    if result := compute_ray_reflection(ray, collision):
+                    collisions.append({
+                        "start": round_point(ray.source),
+                        "end": round_point(collision["point"]),
+                        "alpha_color": alpha
+                    })
+                    if result := compute_ray_reflection(ray, collision, alpha):
                         rays_fifo.append(result)
-                    if result := compute_ray_refraction(ray, collision):
-                        rays_fifo.append(result)
+                    # if result := compute_ray_refraction(ray, collision, alpha):
+                    #     rays_fifo.append(result)
+
                 else:
-                    collisions.append({"start": round_point(ray.source), "end": round_point(Solver.get_ray_inf_point(ray))})
+                    collisions.append(
+                        {"start": round_point(ray.source), "end": round_point(Solver.get_ray_inf_point(ray)), "alpha_color": alpha})
             else:
                 break
             if i > MAX_REFRACTIONS:
@@ -185,3 +209,37 @@ class Solver:
             return Eq((x - pos_x) ** 2 / (h_radius ** 2) + (y - pos_y) ** 2 / (v_radius ** 2), 1)
         return Eq(-1 + (-pos_y - theta * (-pos_x + x) + y) ** 2 / (v_radius ** 2 * (theta ** 2 + 1)) + (
                 -pos_x + theta * (-pos_y + y) + x) ** 2 / (h_radius ** 2 * (theta ** 2 + 1)), 0)
+
+    @staticmethod
+    def calculate_alpha(alpha_initial: float, n1: float, n2: float, mu: float, thickness: float,
+                        n_output: float = None) -> float:
+        """
+        Calculates the final alpha value after passing through a material layer.
+
+        Parameters:
+        :param alpha_initial: initial alpha channel value (0.0-1.0)
+        :param n1: refractive index of the initial medium (e.g., air=1.0)
+        :param n2: refractive index of the transparent medium (e.g., glass=1.5)
+        :param mu: absorption coefficient [unit consistent with thickness]
+            If you give it in cm⁻¹ (e.g. 0.1 cm⁻¹), then the thickness must be in centimeters
+            If you give it in m⁻¹, then the thickness must be in meters
+            (mu=0.1, thickness=15) is equivalent to (mu=10, thickness=0.15)
+        :param thickness: material layer thickness
+        :param n_output: refractive index of the output medium (default=n1)
+        """
+        if n_output is None:
+            n_output = n1
+
+        # Reflection coefficients calculation
+        R_input = ((n2 - n1) / (n2 + n1)) ** 2
+        R_output = ((n_output - n2) / (n_output + n2)) ** 2
+
+        # Absorption calculation
+        absorption = exp(-mu * thickness)
+
+        # Full transmission model with multiple reflections
+        numerator = (1 - R_input) * (1 - R_output) * absorption
+        denominator = 1 - R_input * R_output * (absorption ** 2)
+
+        total_transmission = numerator / denominator
+        return alpha_initial * total_transmission

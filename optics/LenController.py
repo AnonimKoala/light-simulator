@@ -117,6 +117,7 @@ class LenController(BasicController):
                 "normal": round_line(closest_intersection["side"].perpendicular_line(closest_intersection["point"])),
                 "material": self.material,
                 "is-from-inside": self.is_point_inside(ray.source),
+                "thickness": self.d/100  # Assuming thickness [m] is the width of the lens
             }
         return None
 

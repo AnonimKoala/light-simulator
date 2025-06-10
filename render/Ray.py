@@ -22,6 +22,6 @@ class Ray(RayGraphicItem):
     def calc(self):
         path = Solver.get_path(self.controller.ray)
         self.path_points = []
-        for i, segment, in enumerate(path):
-            self.path_points.append({"start": QPointF(segment["start"].x, segment["start"].y), "end": QPointF(segment["end"].x, segment["end"].y)})
+        for i, data, in enumerate(path):
+            self.path_points.append({"start": QPointF(data["start"].x, data["start"].y), "end": QPointF(data["end"].x, data["end"].y), "alpha_color": int(data["alpha_color"])})
         self.rerender()
