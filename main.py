@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene, QWidget, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QGraphicsScene
 import sys
 
+from conf import MIRROR_COUNT, LEN_COUNT, LASER_COUNT
 from graphic.MainWindow import MainWindow
 from graphic.ZoomableView import ZoomableView
 from graphic.config import SCENE_SIZE
@@ -30,8 +31,12 @@ def main():
     # Len(0, 10, 200, view, -30, 30)
     # Laser(50, 50, 50, view)
 
-    Mirror(0,0, 20,200, view)
-    Laser(150, 50, 50, view)
+    for i in range(MIRROR_COUNT):
+        Mirror(0+i*30,0, 20,200, view)
+    for i in range(LEN_COUNT):
+        Len(0, 10+i*30, 200, view, -30, 30)
+    for i in range(LASER_COUNT):
+        Laser(150+i*30, 50, 50, view)
 
     ###################################################################
 
