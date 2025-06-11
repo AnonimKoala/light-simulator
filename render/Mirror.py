@@ -4,7 +4,7 @@ from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QGraphicsItem
 
 from conf import REFRESH_OBJ_TIMEOUT
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.items import RectangleItem
 from optics.MirrorController import MirrorController
 from render.Laser import Laser

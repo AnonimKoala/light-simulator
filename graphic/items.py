@@ -2,7 +2,8 @@ from PyQt6.QtCore import QRectF, Qt, QPointF
 from PyQt6.QtGui import QLinearGradient, QColor, QBrush, QPen, QPainter, QPainterPath, QPolygonF
 from PyQt6.QtWidgets import QGraphicsEllipseItem, QGraphicsRectItem, QGraphicsItem
 from sympy import pi, cos, sin
-from graphic.base import SceneItem, ZoomableView
+from graphic.base import SceneItem
+from graphic.ZoomableView import ZoomableView
 from conf import RAY_MAX_LENGTH, RAY_PEN_WIDTH
 from optics.util import round_point
 

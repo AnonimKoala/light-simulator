@@ -3,7 +3,7 @@ from PyQt6.QtCore import QPointF, QTimer
 from PyQt6.QtGui import QBrush, QColor
 from PyQt6.QtWidgets import QGraphicsItem
 from conf import REFRESH_LASER_TIMEOUT
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.items import RectangleItem
 from optics.Solver import Solver
 from render.Ray import Ray
