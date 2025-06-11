@@ -1,6 +1,6 @@
 from PyQt6.QtCore import QPointF
 
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.items import RayGraphicItem
 from optics.RayController import RayController
 from optics.Solver import Solver

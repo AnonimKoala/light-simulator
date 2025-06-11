@@ -1,6 +1,6 @@
 from sympy import sqrt
 
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.items import TriangleItem
 from optics.PrizmController import PrizmController
 

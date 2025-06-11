@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QGraphicsScene
 import sys
 
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.config import SCENE_SIZE
 from render.Laser import Laser
 from render.Len import Len
