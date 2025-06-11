@@ -1,10 +1,7 @@
 import math
-
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QKeyEvent, QMouseEvent, QWheelEvent
 from PyQt6.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsItem
-
-from graphic.PropertiesPanel import PropertiesPanel
 from graphic.base import SceneItem
 from graphic.config import FONT_SIZE
 
@@ -21,7 +18,7 @@ class ZoomableView(QGraphicsView):
         super().__init__(scene)
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)  # Enable panning
-        self.props_panel: PropertiesPanel
+        self.props_panel = None
 
         self.scale_factor = 1.0
 
