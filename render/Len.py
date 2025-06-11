@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QGraphicsItem
 from sympy import Point2D
 
 from conf import REFRESH_OBJ_TIMEOUT
-from graphic.base import ZoomableView
+from graphic.ZoomableView import ZoomableView
 from graphic.items import LenGraphicItem
 from optics.LenController import LenController
 from render.Laser import Laser

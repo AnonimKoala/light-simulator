@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import QApplication, QGraphicsScene
+from PyQt6.QtWidgets import QApplication, QGraphicsScene, QWidget, QHBoxLayout
 import sys
 
-from graphic.base import ZoomableView
+from graphic.MainWindow import MainWindow
+from graphic.ZoomableView import ZoomableView
 from graphic.config import SCENE_SIZE
 from render.Laser import Laser
 from render.Len import Len
@@ -17,7 +18,8 @@ def main():
 
     view = ZoomableView(scene)   # Create a zoomable view and set the scene
     view.scale(1, -1)        # Invert the y-axis for correct orientation
-    view.setWindowTitle("Light Simulator")
+
+    window = MainWindow(view)
 
     ###################################################################
     # Place your objects here
@@ -33,8 +35,7 @@ def main():
 
     ###################################################################
 
-    view.resize(800, 600)
-    view.show()
+    window.show()
     sys.exit(app.exec())
 
 
