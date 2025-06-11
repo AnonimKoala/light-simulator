@@ -42,7 +42,7 @@ Mirror(0, 0, 20, 200, view)
     - `height`: Height of the mirror
     - `view`: The scene's view object
 
-#### Add a Lens
+#### Add a Lens (In Beta)
 
 ```python
 Len(0, 10, 200, view, -30, 30)
