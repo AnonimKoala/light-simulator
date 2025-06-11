@@ -121,15 +121,15 @@ class Solver:
             i += 1
             print(f"Iteration {i}, ray: {ray}")
             if len(rays_fifo) > 0:
-                ray, alpha = rays_fifo.pop()
+                ray, alpha = rays_fifo.pop(0)
                 if collision := Solver.find_first_collision(ray):
                     collisions.append({
                         "start": round_point(ray.source),
                         "end": round_point(collision["point"]),
                         "alpha_color": alpha
                     })
-                    # if result := compute_ray_reflection(ray, collision, alpha):
-                    #     rays_fifo.append(result)
+                    if result := compute_ray_reflection(ray, collision, alpha):
+                        rays_fifo.append(result)
                     if result := compute_ray_refraction(ray, collision, alpha):
                         rays_fifo.append(result)
 
