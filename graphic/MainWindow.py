@@ -5,7 +5,7 @@ from graphic.PropertiesPanel import PropertiesPanel
 class MainWindow(QWidget):
     def __init__(self, view):
         super().__init__()
-        self.setWindowTitle("Light Simulator")
+        self.setWindowTitle("Light Simulator - Robert Kubasiak")
         self.resize(1000, 600)
         layout = QHBoxLayout(self)
         layout.addWidget(view)
