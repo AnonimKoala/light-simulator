@@ -1,6 +1,7 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSlider, QGridLayout
 from render.Mirror import Mirror
+from render.Ray import Ray
 
 
 class PropertiesPanel(QWidget):
@@ -86,7 +87,7 @@ class PropertiesPanel(QWidget):
         Update the properties panel based on the selected item.
         :param item: The selected item from the scene.
         """
-        if not hasattr(item, "source_point"):  # Check if the item is not a laser
+        if not hasattr(item, "source_point") and not isinstance(item, Ray):  # Check if the item is not a laser
             print(item)
             self.data.select_item(item)
             self.show()
