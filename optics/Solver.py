@@ -80,8 +80,8 @@ class Solver:
             else:
                 n1 = 1
                 n2 = collision_obj["material"].refractive_index
-            # Calculate the absorption coefficient
-            alpha_color = Solver.calculate_alpha(alpha_primary, n1, n2, 0, 0, n2)
+            # Calculate the reflected ray's alpha color based on the refractive indices and absorption coefficient
+            alpha_color = alpha_primary -  Solver.calculate_alpha(alpha_primary, n1, n2, 0, 0, n2)
             return [round_ray(new_ray), alpha_color]
 
         def compute_ray_refraction(incident_ray: Ray2D, collision_obj, alpha_primary: float) -> None | list:
@@ -115,13 +115,16 @@ class Solver:
                 collision_obj["point"] + Point2D(cos(new_ray_angle_to_ox), sin(new_ray_angle_to_ox)) * 2)
             new_ray = Ray2D(new_ray_source, angle=new_ray_angle_to_ox)
             return [round_ray(new_ray), alpha_color]
-        rays_fifo = [[ray, 255]]
+        rays_fifo = [[ray, 255]] # Initial ray with alpha color 255
         i = 0
         while True:
             i += 1
             print(f"Iteration {i}, ray: {ray}")
             if len(rays_fifo) > 0:
                 ray, alpha = rays_fifo.pop(0)
+                if alpha < 5:
+                    print(f"Alpha {alpha} is too low, skipping ray: {ray}")
+                    continue
                 if collision := Solver.find_first_collision(ray):
                     collisions.append({
                         "start": round_point(ray.source),
