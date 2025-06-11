@@ -2,7 +2,7 @@ from math import exp
 from sympy import Point2D, Segment2D, Line2D, Ray, Ray2D, pi, cos, sin, solve, Eq, tan, asin
 from sympy.abc import x, y
 from sympy.geometry.entity import GeometrySet
-from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS
+from conf import RAY_MAX_LENGTH, MAX_REFRACTIONS, IS_REFLECTION, IS_REFRACTION
 from optics.BasicController import BasicController
 from optics.util import round_point, round_ray, angle_to_ox, string_points
 
@@ -131,9 +131,9 @@ class Solver:
                         "end": round_point(collision["point"]),
                         "alpha_color": alpha
                     })
-                    if result := compute_ray_reflection(ray, collision, alpha):
+                    if IS_REFLECTION and (result := compute_ray_reflection(ray, collision, alpha)):
                         rays_fifo.append(result)
-                    if result := compute_ray_refraction(ray, collision, alpha):
+                    if IS_REFRACTION and (result := compute_ray_refraction(ray, collision, alpha)):
                         rays_fifo.append(result)
 
                 else:
